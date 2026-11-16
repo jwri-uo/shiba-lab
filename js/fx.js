@@ -6,6 +6,10 @@
    動きを減らす設定の端末では何もしない。JavaScript が動かなくてもページは普通に読める。 */
 (function () {
   'use strict';
+  // 幅の狭い画面では、左のメニューは分類の名前だけにして、本文をすぐ読めるようにする（押せば開く）
+  if (window.matchMedia && window.matchMedia('(max-width: 960px)').matches) {
+    Array.prototype.forEach.call(document.querySelectorAll('.side__grp[open]'), function (d) { d.removeAttribute('open'); });
+  }
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
   /* ---- 1) 画面に入ったら順に表示 ---- */

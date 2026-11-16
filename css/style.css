@@ -423,3 +423,35 @@ html { overflow-x: hidden; }
 /* 図が2枚続く段落は、横に並べる（広い画面だけ） */
 @media (min-width: 961px) { .doc p:has(img + img) img { max-width: calc(50% - 12px); } }
 .doc th { background: rgba(47,127,232,.3); font-weight: 700; white-space: nowrap; }
+
+/* ===== 下層ページ: 左にいつも見えるメニュー（13ページを3つの分類に。開いているページの分類だけ開く） ===== */
+.with-side { position: relative; z-index: 2; display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 30px; align-items: start; margin-top: 34px; }
+.side { position: sticky; top: 14px; max-height: calc(100vh - 28px); overflow-y: auto; border: 1px solid var(--line); background: rgba(5,16,40,.82); box-shadow: 0 0 22px rgba(47,127,232,.22); }
+.side__grp { border-bottom: 1px solid rgba(109,182,255,.25); }
+.side__grp:last-child { border-bottom: 0; }
+.side__grp summary { display: flex; align-items: center; justify-content: space-between; padding: 11px 16px; background: linear-gradient(90deg, rgba(47,127,232,.42), rgba(47,127,232,.06)); font-size: 15px; font-weight: 700; font-style: italic; letter-spacing: .12em; cursor: pointer; list-style: none; }
+.side__grp summary::-webkit-details-marker { display: none; }
+.side__grp summary::after { content: "\f107"; font-family: FontAwesome; font-style: normal; color: var(--sub); transition: transform .2s; }
+.side__grp[open] summary::after { transform: rotate(180deg); }
+.side__grp summary:hover { color: var(--memorial-hi); }
+.side__grp ul { list-style: none; margin: 0; padding: 5px 0 9px; }
+.side__grp a { display: flex; align-items: center; gap: 10px; padding: 7px 14px 7px 15px; border-left: 3px solid transparent; font-size: 13.5px; font-weight: 700; line-height: 1.5; text-decoration: none; }
+.side__grp a .fa { font-size: 14px; color: #dbe9ff; }
+.side__grp a:hover { color: var(--memorial-hi); }
+.side__grp a.is-current { border-left-color: var(--memorial-hi); background: rgba(47,127,232,.3); color: #fff; }
+.main { min-width: 0; }
+.main .doc { max-width: none; margin: 0; }
+.main .ticker { margin: 0; }
+.main .themes { padding: 34px 0 0; }
+.main .lh { padding: 0; }
+.main .theme-grid--4 { gap: 14px; }
+.main .theme-grid--4 .theme__jp { font-size: 15px; }
+.main .theme-grid--4 .theme__en { font-size: 10.5px; }
+@media (max-width: 960px) {
+  .with-side { display: block; margin-top: 16px; }
+  .side { position: static; max-height: none; margin-bottom: 18px; }
+  .side__grp summary { padding: 9px 14px; font-size: 14px; }
+  .main .themes { padding: 26px 0 0; }
+}
+/* 高さの低い画面では、研究内容ページの見出し帯を低くして、左のメニューを最初の画面に入れる */
+@media (min-width: 961px) and (max-height: 760px) { .phero { min-height: 250px; } .phero--plain { min-height: 130px; } }
