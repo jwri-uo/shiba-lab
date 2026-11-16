@@ -318,3 +318,64 @@ body { background-image: linear-gradient(rgba(109,182,255,.045) 1px, transparent
 /* 画面の外へはみ出す飾り（光の筋、右上の溶接の画像）で、画面が横に動かないようにする */
 html { overflow-x: hidden; }
 @supports (overflow: clip) { html, body { overflow-x: clip; } }
+
+
+/* ===== ここから案K（体験版）で足した分 ===== */
+/* 写真の上のメニュー（タイルに無い8ページ）を高さいっぱいに均等に並べる。
+   画面が低いときは写真を低くして、下のタイルまで最初の画面に入れる */
+@media (min-width: 961px) {
+  .hero { min-height: clamp(340px, calc(100vh - 330px), 500px); }
+  .hero__menu ul { display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
+  .hero__menu li { flex: 1; display: flex; }
+  .hero__menu a { flex: 1; font-size: 14px; }
+}
+
+/* 動くものは1画面に1つに絞る: 光の筋の明滅、「最新」の点滅、流れる文字を止める */
+.beam, .cards li:first-child .cards__meta::after, .ticker__row { animation: none; }
+
+/* 下層ページの下に置くページ一覧 */
+.pagelist { position: relative; z-index: 2; padding: 56px 18px 0; }
+.pagelist ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px 14px; }
+.pagelist a { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border: 1px solid rgba(109,182,255,.4); background: rgba(5,16,40,.6); font-size: 13.5px; font-weight: 700; text-decoration: none; }
+.pagelist a:hover { border-color: var(--memorial-hi); color: var(--memorial-hi); }
+
+/* 線状加熱の体験 */
+.lh { position: relative; z-index: 2; padding: 34px 18px 0; }
+.lh__box { height: clamp(360px, 62vh, 600px); }
+.lh__box canvas { touch-action: none; }
+.lh__msg { position: absolute; z-index: 1; left: 18px; bottom: 12px; margin: 0; font-size: 13.5px; font-weight: 700; pointer-events: none; text-shadow: 0 1px 8px #061330, 0 0 2px #061330; }
+.lh__no { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; margin: 0; color: var(--sub); }
+.lh__bar { display: none; flex-wrap: wrap; gap: 10px 26px; margin-top: 14px; }
+.js-lh .lh__bar { display: flex; }
+.lh__grp { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.lh__grp > span { margin-right: 4px; font-size: 12px; color: var(--sub); }
+.lh__bar button { -webkit-appearance: none; appearance: none; padding: 7px 16px; border: 1px solid rgba(109,182,255,.6); border-radius: 0; background: rgba(5,16,40,.7); color: var(--white); font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.lh__bar button:hover { border-color: #cfe6ff; }
+.lh__bar button.is-on { border-color: #9fd0ff; background: linear-gradient(180deg, #4ea0ff, #1b62d8); box-shadow: 0 0 12px rgba(79,160,255,.7); }
+.lh__bar button:disabled { opacity: .4; cursor: default; }
+.lh__how { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px; font-size: 14px; }
+.lh__how h2 { margin: 0 0 8px; font-size: 17px; font-style: italic; letter-spacing: .04em; color: #cfe6ff; }
+.lh__how p, .lh__how ol { margin: 0; }
+.lh__how ol { padding-left: 1.4em; }
+.lh__note { margin-top: 10px !important; font-size: 12.5px; color: var(--sub); }
+
+@media (max-width: 960px) {
+  .pagelist { padding: 40px 0 0; }
+  .pagelist ul { grid-template-columns: 1fr 1fr; gap: 6px 8px; }
+  .pagelist a { padding: 8px 10px; font-size: 12.5px; }
+  .lh { padding: 24px 0 0; }
+  .lh__box { height: clamp(320px, 56vh, 480px); }
+  .lh__bar { gap: 10px 14px; }
+  .lh__bar button { padding: 7px 12px; font-size: 13px; }
+  .lh__how { grid-template-columns: 1fr; gap: 18px; }
+}
+
+/* 高さの低い画面（小さめのノートパソコン）では上を詰めて、タイルの題名まで最初の画面に入れる */
+@media (min-width: 961px) and (max-height: 760px) {
+  .hd { padding: 10px 0; }
+  .hero { min-height: 300px; }
+  .hero__lead { font-size: 34px; margin-bottom: 12px; }
+  .hero__copy { padding-bottom: 30px; }
+  .hero__menu { margin-bottom: 34px; }
+  .hero__menu a { padding-top: 2px; padding-bottom: 2px; font-size: 13px; }
+}

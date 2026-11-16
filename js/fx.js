@@ -58,6 +58,8 @@
   });
 
   /* ---- 2) 火花 ---- */
+  // 動くものは1画面に1つに絞る: すぐ下で計算の画面が動いているページでは、火花は出さない
+  if (document.getElementById('sim') || document.getElementById('lh')) return;
   var torch = document.querySelector('.hd__torch'), page = document.querySelector('.page');
   if (!torch || !page) return;
   var cv = document.createElement('canvas');

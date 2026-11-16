@@ -23,21 +23,17 @@
       <span class="hd__inst">接合科学研究所<small>JWRI</small></span>
       <span class="hd__lab"><b>柴原研究室</b><span>Shibahara Laboratory</span><small>Joining and Welding Research Institute, The University of Osaka</small></span>
     </a>
-    <ul class="hd__sub">
-      <li><a href="#"><i class="fa fa-globe"></i>English</a></li>
-      <li><a href="#"><i class="fa fa-map-marker"></i>アクセス</a></li>
-    </ul>
   </header>
 
   <nav class="gn">
     <ul>
       <li class="is-current"><a href="index.html"><i class="fa fa-home"></i>ホーム</a></li>
-      <li><a href="#"><i class="fa fa-university"></i>研究室について</a></li>
       <li><a href="research.html"><i class="fa fa-flask"></i>研究内容</a></li>
-      <li><a href="#"><i class="fa fa-users"></i>メンバー</a></li>
-      <li><a href="#"><i class="fa fa-trophy"></i>業績・受賞</a></li>
-      <li><a href="#"><i class="fa fa-picture-o"></i>ギャラリー</a></li>
+      <li><a href="lineheat.html"><i class="fa fa-fire"></i>線状加熱の体験</a></li>
       <li><a href="#"><i class="fa fa-bell"></i>お知らせ</a></li>
+      <li><a href="#pages"><i class="fa fa-th-list"></i>ページ一覧</a></li>
+      <li><a href="#"><i class="fa fa-map-marker"></i>アクセス</a></li>
+      <li><a href="#"><i class="fa fa-globe"></i>English</a></li>
     </ul>
   </nav>
 
@@ -53,20 +49,15 @@
       <p class="hero__lead">接合・溶接の科学で<br>ものづくりの未来を拓く</p>
       <p class="hero__en"><span>ADVANCING MANUFACTURING</span><br>THROUGH JOINING AND WELDING SCIENCE</p>
     </div>
-    <nav class="hero__menu" aria-label="ページの一覧">
+    <nav class="hero__menu" id="pages" aria-label="ページの一覧">
       <ul>
-        <li><a href="#"><i class="fa fa-users"></i>柴原正和教授の研究実績</a></li>
         <li><a href="#"><i class="fa fa-cog"></i>研究室メンバー紹介</a></li>
-        <li><a href="#"><i class="fa fa-graduation-cap"></i>学生の受賞実績・特許</a></li>
         <li><a href="#"><i class="fa fa-user"></i>学生全員の発表実績</a></li>
-        <li><a href="#"><i class="fa fa-cogs"></i>理想化陽解法FEMとは</a></li>
-        <li><a href="#"><i class="fa fa-book"></i>研究動画</a></li>
         <li><a href="#"><i class="fa fa-picture-o"></i>ポスターギャラリー</a></li>
         <li><a href="#"><i class="fa fa-file-text-o"></i>論文ギャラリー</a></li>
         <li><a href="#"><i class="fa fa-flask"></i>実験設備</a></li>
         <li><a href="#"><i class="fa fa-building"></i>柴原研究室とは？</a></li>
         <li><a href="#"><i class="fa fa-list"></i>修論・卒論テーマ</a></li>
-        <li><a href="#"><i class="fa fa-desktop"></i>Technology Summary</a></li>
         <li><a href="#"><i class="fa fa-camera"></i>写真館</a></li>
       </ul>
     </nav>
@@ -103,7 +94,7 @@
   <div class="ticker" aria-hidden="true"><p class="ticker__row"><span>Welding and Joining</span><span>Computational Welding Mechanics</span><span>Idealized Explicit FEM</span><span>Artificial Intelligence / Machine Learning</span><span>Digital Twin</span><span>Welding Robot and Automation</span><span>Line Heating &amp; Distortion Correction</span><span>Metal Additive Manufacturing</span><span>Shot Peening Simulation</span><span>Hot Cracking and Integrity Assessment</span><span>Structural Integrity of Joined Structures</span><span>Block Assembly Optimization for Shipbuilding</span><span>Eulerian Method (FSW / Machining)</span><span>Adaptive Local Remeshing</span><span>Residual Stress and Measurement</span><span>Smart Shipbuilding (DX)</span><span>Lunar City Development</span><span>Materials Database / DPAS</span><span>Education and Human Resource Development</span><span>Industry-Academia and International Collaboration</span><span>Welding and Joining</span><span>Computational Welding Mechanics</span><span>Idealized Explicit FEM</span><span>Artificial Intelligence / Machine Learning</span><span>Digital Twin</span><span>Welding Robot and Automation</span><span>Line Heating &amp; Distortion Correction</span><span>Metal Additive Manufacturing</span><span>Shot Peening Simulation</span><span>Hot Cracking and Integrity Assessment</span><span>Structural Integrity of Joined Structures</span><span>Block Assembly Optimization for Shipbuilding</span><span>Eulerian Method (FSW / Machining)</span><span>Adaptive Local Remeshing</span><span>Residual Stress and Measurement</span><span>Smart Shipbuilding (DX)</span><span>Lunar City Development</span><span>Materials Database / DPAS</span><span>Education and Human Resource Development</span><span>Industry-Academia and International Collaboration</span></p></div>
 
   <section class="lsim">
-    <div class="news__head"><h2 class="news__ttl">ライブ計算<small>LIVE SIMULATION</small></h2><p class="news__more"><a href="research.html">研究内容を見る<i class="fa fa-chevron-right"></i></a></p></div>
+    <div class="news__head"><h2 class="news__ttl">ライブ計算<small>LIVE SIMULATION</small></h2><p class="news__more"><a href="lineheat.html">自分で加熱してみる<i class="fa fa-chevron-right"></i></a></p></div>
     <div class="lsim__box">
       <canvas id="plate" aria-hidden="true"></canvas>
       <p class="phero__hud"><span class="live">LIVE</span>簡易デモ　溶接パス <b id="plate-pass">-</b>　ステップ <b id="plate-step">0</b>　最大たわみ <b id="plate-def">0</b> Δx</p>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>線状加熱の体験｜柴原研究室｜大阪大学 接合科学研究所</title>
+<meta name="description" content="大阪大学 接合科学研究所 柴原研究室のホームページです。">
+<link rel="stylesheet" href="vendor/font-awesome/css/font-awesome.min.css">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/fx.js" defer></script>
+<script src="js/plate-model.js" defer></script>
+<script src="js/lineheat.js" defer></script>
+</head>
+<body>
+
+<div class="page">
+  <span class="beam" style="left:520px; top:30px; width:620px; transform:rotate(-8deg); opacity:.5"></span>
+
+  <header class="hd">
+    <img class="hd__torch" src="img/tile-alt-torch.jpg" alt="">
+    <a class="hd__name" href="index.html">
+      <span class="hd__logo" title="大学のロゴ（正式なデータを入れる場所）">ロゴ</span>
+      <span class="hd__univ">大阪大学<small>OSAKA UNIVERSITY</small></span>
+      <span class="hd__inst">接合科学研究所<small>JWRI</small></span>
+      <span class="hd__lab"><b>柴原研究室</b><span>Shibahara Laboratory</span><small>Joining and Welding Research Institute, The University of Osaka</small></span>
+    </a>
+  </header>
+
+  <nav class="gn">
+    <ul>
+      <li><a href="index.html"><i class="fa fa-home"></i>ホーム</a></li>
+      <li><a href="research.html"><i class="fa fa-flask"></i>研究内容</a></li>
+      <li class="is-current"><a href="lineheat.html"><i class="fa fa-fire"></i>線状加熱の体験</a></li>
+      <li><a href="#"><i class="fa fa-bell"></i>お知らせ</a></li>
+      <li><a href="#pages"><i class="fa fa-th-list"></i>ページ一覧</a></li>
+      <li><a href="#"><i class="fa fa-map-marker"></i>アクセス</a></li>
+      <li><a href="#"><i class="fa fa-globe"></i>English</a></li>
+    </ul>
+  </nav>
+
+  <section class="lh">
+    <div class="news__head"><h1 class="news__ttl">線状加熱の体験<small>LINE HEATING</small></h1></div>
+    <div class="lsim__box lh__box">
+      <canvas id="lh" aria-label="線状加熱の体験。板の上をなぞると加熱線を引けます"></canvas>
+      <noscript><p class="lh__no">この体験には JavaScript が必要です。</p></noscript>
+      <p class="phero__hud"><span class="live">LIVE</span>簡易デモ　加熱した線 <b id="lh-lines">0</b> 本　最大たわみ <b id="lh-def">0</b> Δx　一致度 <b id="lh-score">-</b></p>
+      <p class="lh__msg" id="lh-msg"></p>
+    </div>
+    <div class="lh__bar" id="lh-bar">
+      <div class="lh__grp"><span>お題</span><button type="button" data-goal="free">自由</button><button type="button" data-goal="cyl">円筒</button><button type="button" data-goal="saddle">鞍</button><button type="button" data-goal="twist">ねじれ</button></div>
+      <div class="lh__grp"><span>加熱する面</span><button type="button" data-side="1">表から</button><button type="button" data-side="-1">裏から</button></div>
+      <div class="lh__grp"><button type="button" data-act="hint">ヒント</button><button type="button" data-act="demo">お手本</button><button type="button" data-act="undo">1本戻す</button><button type="button" data-act="reset">最初から</button></div>
+    </div>
+    <div class="lh__how">
+      <div>
+        <h2>あそび方</h2>
+        <ol>
+          <li>板の上を指やマウスでなぞると、白い線が引かれます。</li>
+          <li>その線に沿ってバーナーが動き、板を加熱します。冷えると、加熱した面の側へ板が折れます。</li>
+          <li>「裏から」に切り替えると、反対の向きに折れます。板の外をなぞると視点が回ります。</li>
+          <li>お題を選ぶと、目標の形が橙の網で出ます。一致度が 80% になれば合格です。</li>
+        </ol>
+      </div>
+      <div>
+        <h2>線状加熱とは</h2>
+        <p>鋼板の表面をガスバーナーで線状に加熱し、冷えるときの縮みで板を曲げる方法です。船の外板のような曲面を作るのに使われています。</p>
+        <p class="lh__note">※この画面は考え方を示す簡易デモです。熱伝導は陽解法、曲げは加熱した所に残る曲げのひずみだけを考えた薄板の計算で、研究室の解析コードそのものではありません。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="pagelist" id="pages">
+    <div class="news__head"><h2 class="news__ttl">ページ一覧<small>PAGES</small></h2></div>
+    <ul>
+      <li><a href="#"><i class="fa fa-users"></i>柴原正和教授の研究実績</a></li>
+      <li><a href="#"><i class="fa fa-cog"></i>研究室メンバー紹介</a></li>
+      <li><a href="#"><i class="fa fa-graduation-cap"></i>学生の受賞実績・特許</a></li>
+      <li><a href="#"><i class="fa fa-user"></i>学生全員の発表実績</a></li>
+      <li><a href="#"><i class="fa fa-cogs"></i>理想化陽解法FEMとは</a></li>
+      <li><a href="#"><i class="fa fa-book"></i>研究動画</a></li>
+      <li><a href="#"><i class="fa fa-picture-o"></i>ポスターギャラリー</a></li>
+      <li><a href="#"><i class="fa fa-file-text-o"></i>論文ギャラリー</a></li>
+      <li><a href="#"><i class="fa fa-flask"></i>実験設備</a></li>
+      <li><a href="#"><i class="fa fa-building"></i>柴原研究室とは？</a></li>
+      <li><a href="#"><i class="fa fa-list"></i>修論・卒論テーマ</a></li>
+      <li><a href="#"><i class="fa fa-desktop"></i>Technology Summary</a></li>
+      <li><a href="#"><i class="fa fa-camera"></i>写真館</a></li>
+    </ul>
+  </section>
+</div>
+
+<footer class="ft">
+  <p class="ft__big" aria-hidden="true">SHIBAHARA LAB</p>
+  <div class="page">
+    <p>大阪大学 接合科学研究所 柴原研究室　〒567-0047 大阪府茨木市美穂ヶ丘11番1号</p>
+    <p>&copy; Shibahara Laboratory</p>
+  </div>
+</footer>
+
+</body>
+</html>
