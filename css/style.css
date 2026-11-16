@@ -379,3 +379,47 @@ html { overflow-x: hidden; }
   .hero__menu { margin-bottom: 34px; }
   .hero__menu a { padding-top: 2px; padding-bottom: 2px; font-size: 13px; }
 }
+
+/* ===== 下層ページの本文。枠と色はトップと同じにして、読む所だけ落ち着かせる ===== */
+.phero--plain { min-height: 170px; background: linear-gradient(100deg, rgba(47,127,232,.36), rgba(6,19,48,0) 64%), repeating-linear-gradient(112deg, rgba(109,182,255,.08) 0 2px, transparent 2px 26px); }
+.phero--plain::after { display: none; }
+.phero--plain .phero__text { padding-bottom: 26px; }
+.phero--plain .phero__ttl { font-size: 38px; }
+.doc { position: relative; z-index: 2; max-width: 980px; margin: 34px auto 0; padding: 32px 42px 30px; box-sizing: border-box; border: 1px solid rgba(109,182,255,.35); background: rgba(9,24,60,.86); font-size: 15.5px; line-height: 1.95; color: #e9f0fb; overflow-wrap: anywhere; }
+.doc > :first-child { margin-top: 0; }
+.doc p { margin: 0 0 1.1em; }
+.doc strong { color: #fff; }
+.doc a { color: #9fd0ff; }
+.doc h2 { position: relative; margin: 2.4em 0 1em; padding: 0 0 12px 46px; font-size: 22px; font-style: italic; letter-spacing: .05em; line-height: 1.5; }
+.doc h2::before { content: ""; position: absolute; left: 0; top: 5px; width: 32px; height: 24px; background: linear-gradient(135deg, #8cc8ff, #2f7fe8); clip-path: polygon(45% 0, 100% 0, 55% 100%, 0 100%); }
+.doc h2::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; border-radius: 3px; background: repeating-linear-gradient(112deg, rgba(159,208,255,.95) 0 2px, rgba(47,127,232,.4) 2px 7px); -webkit-mask-image: linear-gradient(90deg, #000 30%, transparent 96%); mask-image: linear-gradient(90deg, #000 30%, transparent 96%); }
+.doc h3 { margin: 2em 0 .8em; padding: 1px 0 1px 14px; border-left: 4px solid var(--memorial-hi); box-shadow: -7px 0 12px -7px rgba(79,160,255,.9); font-size: 17.5px; line-height: 1.6; color: #fff; }
+.doc h4 { margin: .6em 0 .3em; font-size: 24px; letter-spacing: .08em; }
+.doc img { max-width: 100%; height: auto; margin: 4px 8px 8px 0; border: 1px solid rgba(109,182,255,.55); border-radius: 6px; background: #fff; box-shadow: 0 0 14px rgba(47,127,232,.35); vertical-align: top; }
+.doc__scroll { margin: 0 0 1.6em; overflow-x: auto; border: 1px solid rgba(109,182,255,.3); }
+.doc table { width: 100%; border-collapse: collapse; font-size: 13.5px; line-height: 1.7; }
+.doc td, .doc th { padding: 7px 10px; border-bottom: 1px solid rgba(109,182,255,.18); border-right: 1px solid rgba(109,182,255,.12); vertical-align: top; text-align: left; }
+.doc td p { margin: 0; }
+.doc tr:nth-child(even) td { background: rgba(47,127,232,.07); }
+.doc td[colspan] { background: linear-gradient(90deg, rgba(47,127,232,.55), rgba(47,127,232,.12)); font-size: 15px; letter-spacing: .08em; }
+.doc td:first-child { white-space: nowrap; font-family: var(--en); color: #9fd0ff; }
+.doc td[colspan]:first-child { white-space: normal; font-family: inherit; color: #fff; }
+.doc__src { margin: 2.6em 0 0 !important; padding-top: 12px; border-top: 1px solid rgba(109,182,255,.25); font-size: 12.5px; color: var(--sub); text-align: right; }
+@media (max-width: 960px) {
+  .phero--plain { min-height: 120px; }
+  .phero--plain .phero__ttl { font-size: 25px; }
+  .doc { margin-top: 18px; padding: 18px 14px 20px; font-size: 14.5px; line-height: 1.9; }
+  .doc h2 { padding-left: 38px; font-size: 19px; }
+  .doc h2::before { width: 26px; height: 20px; }
+  .doc h3 { font-size: 16px; }
+  .doc table { min-width: 620px; font-size: 12.5px; }
+}
+
+/* 長いページの目次（見出しが4つ以上あるページに自動で付く） */
+.doc__toc ul { list-style: none; margin: 0 0 1.8em; padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 8px 10px; border: 1px solid rgba(109,182,255,.3); background: rgba(5,16,40,.5); }
+.doc__toc a { display: block; padding: 2px 14px; border: 1px solid rgba(109,182,255,.5); font-size: 13px; color: #e9f0fb; text-decoration: none; }
+.doc__toc a:hover { border-color: #cfe6ff; background: rgba(47,127,232,.35); color: #fff; }
+.doc h2 { scroll-margin-top: 14px; }
+/* 図が2枚続く段落は、横に並べる（広い画面だけ） */
+@media (min-width: 961px) { .doc p:has(img + img) img { max-width: calc(50% - 12px); } }
+.doc th { background: rgba(47,127,232,.3); font-weight: 700; white-space: nowrap; }
