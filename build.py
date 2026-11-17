@@ -32,6 +32,10 @@ ANCHORS = ('fem.html', 'facility.html')                                     # �
 NO_RELATED = {'index.html', 'research.html', 'news.html', 'access.html'}    # 「関連するページ」の候補にしないページ
 NL = '\n'
 SUFFIX = '｜柴原研究室｜大阪大学 接合科学研究所'                               # タブに出る題名の後ろに付ける文字
+SITE_URL = 'https://jwri-uo.github.io/shiba-lab/'                           # サイトの場所。別のサーバーや独自ドメインへ移したら、ここを直す
+SEARCH = False                                                              # 検索に出すか。False の間は、全ページに検索よけを付ける。True にすると外れ、サイトマップも作る
+DESCRIPTION = '大阪大学 接合科学研究所 柴原研究室のホームページです。'           # 本文の無いページの説明文
+AUTO_HEAD = ('<meta name="description"', '<meta name="robots"', '<meta property="og:', '<meta name="twitter:', '<base ')   # <head> の中で自動で付け直す行
 
 
 def read_menu():
@@ -213,15 +217,47 @@ def read_spots():
     return spots
 
 
-def rebuild(name, s, news, spots):
-    """1ページを作り直して返す。<main> の中の人が書いた所と、題名・そのページだけの読み込みは、そのまま残す"""
+def describe(name, body):
+    """検索や共有のときに出る説明文。本文の頭の100字ほど。本文が無いページは決まった文"""
+    art = re.search(r'<article class="doc[^"]*">(.*?)</article>', body, re.S)
+    if art:
+        t = re.sub(r'<nav class="doc__toc".*?</nav>|<p class="(?:doc__lead|news__date|news__nav|doc__src)">.*?</p>|<h2 class="news__title">.*?</h2>|<!--.*?-->', ' ', art.group(1), flags=re.S)
+        t = plain(t)
+        if len(t) >= 20:
+            return t[:100] + ('…' if len(t) > 100 else '')
+    return DESCRIPTION
+
+
+def auto_head(name, title, body, by_file):
+    """<head> の中の、自動で付ける行（説明文、共有したときの題名・画像、検索よけなど）"""
+    n = by_file.get(name)
+    desc = html.escape(describe(name, body), quote=True)
+    pic = n['first'] if n and n['first'] else 'img/ogp.jpg'
+    lines = []
+    if name == '404.html':   # どの場所から開かれても部品を読めるように、サイトの場所を基準にする
+        lines.append(f'<base href="{SITE_URL}">')
+    lines += [f'<meta name="description" content="{desc}">',
+              f'<meta property="og:title" content="{html.escape(html.unescape(title), quote=True)}">',
+              f'<meta property="og:description" content="{desc}">',
+              f'<meta property="og:type" content="{"article" if n else "website"}">',
+              f'<meta property="og:url" content="{SITE_URL}{"" if name == "index.html" else name}">',
+              f'<meta property="og:image" content="{SITE_URL}{pic}">',
+              f'<meta property="og:site_name" content="{SUFFIX.lstrip("｜")}">',
+              '<meta name="twitter:card" content="summary_large_image">']
+    if SEARCH and name not in ('404.html',) and not name.startswith(SKIP):
+        lines.append(f'<link rel="canonical" href="{SITE_URL}{"" if name == "index.html" else name}">')
+    else:
+        lines.append('<meta name="robots" content="noindex">')
+    return ''.join(l + NL for l in lines)
+
+
+def rebuild(name, s, news, spots, by_file):
+    """1ページを作り直して返す。<main> の中の人が書いた所と、そのページだけの読み込みは、そのまま残す"""
     title = re.search(r'<title>(.*?)</title>', s, re.S).group(1).strip()
     head = s[s.index('<head>') + len('<head>'):s.index('</head>')]
-    extra = [l.strip() for l in head.split(NL) if l.strip() and l.strip() not in FRAME_HEAD and not l.strip().startswith('<title>')]
-    # 検索よけの行は、ひな形にだけ付ける（ひな形から写して作ったページに残らないように）
-    extra = [l for l in extra if not l.startswith('<meta name="robots"')]
-    if name.startswith(SKIP):
-        extra.append('<meta name="robots" content="noindex">')
+    extra = [l.strip() for l in head.split(NL) if l.strip() and l.strip() not in FRAME_HEAD and not l.strip().startswith(('<title>',) + AUTO_HEAD)]
+    if SEARCH:   # 検索に出すときは、正本の場所をこのサイト自身にする（公立大サイトを指す行は外す）
+        extra = [l for l in extra if not l.startswith('<link rel="canonical"')]
     m = re.search(r'<main>\n(.*)\n</main>', s, re.S)
     body = m.group(1)
     # タブに出る題名は、ページの見出しから付ける（お知らせは記事の題名、ほかは大きな見出し）。見出しの無いページは今の題名のまま
@@ -238,15 +274,14 @@ def rebuild(name, s, news, spots):
     body = region(body, '前後の記事', nav_html(news, name))
     body = re.sub(r'(<!-- 自動:関連 (.*?) -->)\n?.*?\n?([ \t]*<!-- /自動:関連 -->)',
                   lambda r: r.group(1) + NL + related_html(news, spots, r.group(2).strip()) + NL + r.group(3), body, flags=re.S)
-    frame = FRAME
-    if any(l.startswith('<meta name="description"') for l in extra):   # そのページ独自の説明文があれば、共通の説明文は外す
-        frame = re.sub(r'<meta name="description"[^>]*>\n', '', frame)
-    frame = frame.replace('{{題名}}', title).replace('{{このページだけの行}}', ''.join(l + NL for l in extra)).replace('{{帯}}', bar_html(name))
+    frame = FRAME.replace('{{題名}}', title).replace('{{自動の行}}', auto_head(name, title, body, by_file).rstrip(NL))
+    frame = frame.replace('{{このページだけの行}}', ''.join(l + NL for l in extra)).replace('{{帯}}', bar_html(name))
     return frame.replace('{{本文}}', body)
 
 
 def main():
     news, spots = read_news(), read_spots()
+    by_file = {n['file']: n for n in news}
     pages = [f for f in sorted(glob.glob('*.html')) if not f.startswith('google')]
     changed, skipped = [], []
     for f in pages:
@@ -254,7 +289,7 @@ def main():
         if not re.search(r'<main>\n.*\n</main>', s, re.S):
             skipped.append(f)
             continue
-        new = rebuild(f, s, news, spots)
+        new = rebuild(f, s, news, spots, by_file)
         if new != s:
             changed.append(f)
             if APPLY:
