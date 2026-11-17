@@ -537,3 +537,13 @@ html { overflow-x: hidden; }
 /* 発表実績: 学生の写真を全員同じ大きさにそろえる（メンバー紹介と同じ） */
 .doc--presentations td img { display: block; width: 160px; height: 200px; max-width: none; margin: 0 auto 6px; object-fit: cover; object-position: 50% 18%; }
 @media (max-width: 960px) { .doc--presentations td img { width: 104px; height: 130px; } }
+
+/* OB・OGリスト: 写真を全員同じ大きさにそろえる（メンバー紹介と同じ） */
+.doc--ob td:first-child { width: 160px; }
+.doc--ob td img { display: block; width: 160px; height: 200px; max-width: none; margin: 0; object-fit: cover; object-position: 50% 18%; }
+@media (max-width: 960px) {
+  .doc--ob table { min-width: 0; }
+  .doc--ob table:has(td:nth-child(3)) { min-width: 620px; }   /* 1行に2人並ぶ表だけは、横に動かせる形のまま */
+  .doc--ob td:first-child { width: 104px; }
+  .doc--ob td img { width: 104px; height: 130px; }
+}
