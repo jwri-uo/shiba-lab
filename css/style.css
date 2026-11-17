@@ -533,3 +533,7 @@ html { overflow-x: hidden; }
   .doc--member td:first-child { width: 104px; }
   .doc--member td:first-child img { width: 104px; height: 130px; }
 }
+
+/* 発表実績: 学生の写真を全員同じ大きさにそろえる（メンバー紹介と同じ） */
+.doc--presentations td img { display: block; width: 160px; height: 200px; max-width: none; margin: 0 auto 6px; object-fit: cover; object-position: 50% 18%; }
+@media (max-width: 960px) { .doc--presentations td img { width: 104px; height: 130px; } }
