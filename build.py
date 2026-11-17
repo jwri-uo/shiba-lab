@@ -294,6 +294,13 @@ def main():
             changed.append(f)
             if APPLY:
                 open(f, 'w', encoding='utf-8', newline=NL).write(new)
+    if SEARCH:   # 検索に出すときだけ、検索エンジン向けのページ一覧（サイトマップ）を作る
+        urls = [SITE_URL + ('' if f == 'index.html' else f) for f in pages if f != '404.html' and not f.startswith(SKIP)]
+        xml = '<?xml version="1.0" encoding="UTF-8"?>' + NL + '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + NL
+        xml += ''.join(f'  <url><loc>{u}</loc></url>' + NL for u in urls) + '</urlset>' + NL
+        if APPLY:
+            open('sitemap.xml', 'w', encoding='utf-8', newline=NL).write(xml)
+        print(f'サイトマップ {len(urls)} 件')
     print(f'ページ {len(pages)} / お知らせ {len(news)} 本 / {"書き直した" if APPLY else "書き直す必要がある"}ページ {len(changed)}')
     if changed:
         print('  ', ', '.join(changed[:12]) + (' ほか' if len(changed) > 12 else ''))
