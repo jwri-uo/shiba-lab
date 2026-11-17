@@ -524,3 +524,12 @@ html { overflow-x: hidden; }
   .newslist__pic--none { font-size: 20px; }
   .newslist__ttl { font-size: 13px; }
 }
+
+/* メンバー紹介: 写真を全員同じ大きさにそろえる（お知らせ一覧の画像と同じ幅） */
+.doc--member td:first-child { width: 160px; }
+.doc--member td:first-child img { display: block; width: 160px; height: 200px; max-width: none; margin: 0; object-fit: cover; object-position: 50% 18%; }
+@media (max-width: 960px) {
+  .doc--member table { min-width: 0; }
+  .doc--member td:first-child { width: 104px; }
+  .doc--member td:first-child img { width: 104px; height: 130px; }
+}
