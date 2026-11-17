@@ -1,0 +1,35 @@
+# メニューの定義。1行が1項目で、「題名 | ファイル名 | アイコン」の順に書く。
+# ここを直して push すると、全ページの上の帯と左のメニューが作り直される。
+# アイコンの名前は Font Awesome 4.7 のもの（fa-home など）。
+
+# 上の帯
+[帯]
+ホーム | index.html | fa-home
+研究内容 | research.html | fa-flask
+線状加熱の体験 | lineheat.html | fa-fire
+お知らせ | news.html | fa-bell
+アクセス | access.html | fa-map-marker
+
+# 左のメニュー。[ ] の中が分類の名前。分類は増やせる。
+# 行の最後に「| タイル」と書いたページは、トップでは絵のタイルで出しているので、写真の上の一覧には出さない。
+# 「| 下層のみ」と書いたページは、トップの写真の上の一覧には出さない。
+
+[研究室]
+柴原研究室とは？ | about.html | fa-building
+研究室メンバー紹介 | member.html | fa-cog
+実験設備 | facility.html | fa-flask
+写真館 | photos.html | fa-camera
+
+[研究]
+理想化陽解法FEMとは | fem.html | fa-cogs | タイル
+Technology Summary | summary.html | fa-desktop | タイル
+研究動画 | movies.html | fa-book | タイル
+修論・卒論テーマ | themes.html | fa-list
+
+[実績]
+柴原正和教授の研究実績 | achievements.html | fa-users | タイル
+学生の受賞実績・特許 | awards.html | fa-graduation-cap | タイル
+学生全員の発表実績 | presentations.html | fa-user
+共同研究・特許出願等 | cooperation.html | fa-handshake-o | 下層のみ
+ポスターギャラリー | posters.html | fa-picture-o
+論文ギャラリー | papers.html | fa-file-text-o

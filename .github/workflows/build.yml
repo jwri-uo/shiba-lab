@@ -1,0 +1,54 @@
+name: サイトの自動生成
+
+# ページを直したり、お知らせを足したりして push すると、共通の枠・メニュー・お知らせの一覧などを自動で作り直す。
+# 編集する人が手元で Python を実行しなくて済むようにするための仕組み。
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '*.html'            # ページやお知らせ
+      - '_frame/**'         # 共通の枠（frame.html）とメニューの定義（menu.txt）
+      - 'build.py'
+  workflow_dispatch:        # 手動でも実行できるようにしておく
+
+permissions:
+  contents: write
+
+concurrency:                # 続けて push されたときに衝突させない
+  group: site-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # PDF や動画（files/）は作り直しに要らないので取ってこない（約3GBあり、取ると遅い）
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/files/
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 画像を扱う部品を入れる（お知らせの小さな画像を作るのに使う）
+        run: pip install pillow
+
+      - name: 共通の枠と一覧を作り直す
+        run: python build.py --apply
+
+      - name: 変更があれば記録して反映
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "更新の必要はありませんでした。"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Rebuild the shared frame and the listings"
+          git push
