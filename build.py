@@ -16,7 +16,7 @@ push すると GitHub が自動で --apply を実行するので、ふだんは�
   <!-- 自動:新着 -->           トップのお知らせ（新しい6件）
   <!-- 自動:お知らせ一覧 -->   お知らせの一覧（年ごと）
   <!-- 自動:前後の記事 -->     お知らせの記事の下の「新しい記事／一覧へ／古い記事」
-  <!-- 自動:関連 言葉|言葉 --> 研究テーマのページの、関連するページとお知らせ（題名にその言葉を含むもの。言葉は | で区切る）
+  <!-- 自動:関連 言葉|言葉 --> 研究テーマのページの、関連するページとお知らせ（題名にその言葉を含むもの。言葉は | で区切り、記号もそのままの文字として探す）
 
 お知らせは news-〜.html という名前のページ全部（〜は半角の小文字・数字・ハイフン）。日付・分類・題名は、そのページの中から読む。
 一覧とトップの小さな画像（img/ns-〜.jpg、img/nt-〜.jpg）は、記事の最初の写真から自動で作る。写真が替われば作り直し、
@@ -42,7 +42,7 @@ SUFFIX = '｜柴原研究室｜大阪大学 接合科学研究所'              
 SITE_URL = 'https://jwri-uo.github.io/shiba-lab/'                           # サイトの場所。別のサーバーや独自ドメインへ移したら、ここを直す
 SEARCH = False                                                              # 検索に出すか。False の間は、全ページに検索よけを付ける。True にすると外れ、サイトマップも作る
 DESCRIPTION = '大阪大学 接合科学研究所 柴原研究室のホームページです。'           # 本文の無いページの説明文
-PEOPLE = {'member.html', 'ob.html', 'presentations.html', 'awards.html', 'themes.html', 'photos.html'}   # 人の名前や写真が中心のページ。共有したときの説明文に名前が出ないよう、決まった文にする
+PEOPLE = {'member.html', 'ob.html', 'presentations.html', 'awards.html', 'themes.html', 'photos.html', 'cooperation.html', 'papers.html'}   # 人の名前や写真が中心のページと、頭に発明者・著者の名前が並ぶページ。共有したときの説明文に名前が出ないよう、決まった文にする
 SKIP = ('hinagata-',)                                                       # ひな形。お知らせの一覧などには入れない
 ANCHORS = ('fem.html', 'facility.html')                                     # 小見出しも「関連するページ」の候補にするページ
 NO_RELATED = {'index.html', 'research.html', 'news.html', 'access.html'}    # 「関連するページ」の候補にしないページ
@@ -322,6 +322,10 @@ def read_news(pages):
             continue
         sc = re.sub(r'<!--(?!\s*/?\s*自動\s*[:：]).*?-->', '', s, flags=re.S)   # コメントにして隠した所は見ない
         d, t = DATE_RX.search(sc), TITLE_RX.search(sc)
+        if not d and not t:
+            problem(f, 'news- で始まる名前は、お知らせの記事に使う名前です。', 'お知らせでないページなら名前を news- 以外にし、お知らせなら hinagata-news.html を写して作ってください。')
+            bad.add(f)
+            continue
         if not d:
             problem(f, '日付が読めません。', '<p class="news__date">2026.11.20<span class="cards__cat">報告</span></p> のように、数字と点は半角で、年.月.日 の形で書いてください。')
             bad.add(f)
@@ -443,7 +447,7 @@ def nav_html(news, name):
 
 
 def related_html(news, spots, words):
-    rx = re.compile(fold(words))
+    rx = word_rx(words)
     rel = [(h, t) for h, t in spots if rx.search(fold(t))]
     hit = [n for n in news if rx.search(fold(n['title']))]
     out = ''
@@ -458,22 +462,24 @@ def related_html(news, spots, words):
     return out
 
 
+def word_rx(words):
+    """関連の言葉から、題名を探す式を作る。言葉は記号も含めてそのままの文字として探す。
+    (? で始まる言葉だけは式として使う（theme-04 の「前後が英字でない AI」など。その中には | を書かない）"""
+    return re.compile('|'.join(w if w.startswith('(?') else re.escape(w) for w in fold(words).split('|')))
+
+
 def check_words(f, words, news):
     """研究テーマの「関連」の言葉が使えるか。だめなら問題として覚えて False"""
-    if not words or any(not w for w in words.split('|')):
-        problem(f, '目印 <!-- 自動:関連 … --> の言葉が空です。', '「溶接|接合」のように、言葉を | で区切って書いてください。')
+    if not words or any(not w for w in fold(words).split('|')):
+        problem(f, '目印 <!-- 自動:関連 … --> の言葉が空です。', '「溶接|接合」のように、言葉を半角の | で区切って書いてください。')
         return False
     try:
-        rx = re.compile(fold(words))
+        rx = word_rx(words)
     except re.error:
-        problem(f, f'目印 <!-- 自動:関連 … --> の言葉「{words}」に、そのままでは使えない記号（括弧など）があります。', '記号を使わずに書くか、もとの書き方に戻してください。')
+        problem(f, f'目印 <!-- 自動:関連 … --> の言葉「{words}」の、(? で始まる式が読めません。', '式を使わずに、言葉だけを | で区切って書いてください。')
         return False
-    for w in words.split('|'):
-        rest = re.sub(r'\(\?<?[=!][^)]*\)', '', w)
-        if re.search(r'[\\.^$*+?{}\[\]()]', rest):
-            warn(f, f'関連の言葉「{w}」の記号は、文字そのものではなく特別な意味になります。記号を使わずに書くと確実です。')
     if len(news) >= 20 and sum(1 for n in news if rx.search(fold(n['title']))) >= 0.9 * len(news):
-        problem(f, f'目印 <!-- 自動:関連 … --> の言葉「{words}」が、ほとんど全部のお知らせに当てはまります。', '「.」などの記号が入っていないか確かめてください。')
+        problem(f, f'目印 <!-- 自動:関連 … --> の言葉「{words}」が、ほとんど全部のお知らせに当てはまります。', '言葉が短すぎないか、(? で始まる式が何にでも当てはまらないか確かめてください。')
         return False
     return True
 
