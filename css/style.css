@@ -611,3 +611,11 @@ html { overflow-x: hidden; }
   .tiles a:hover img, .theme a:hover img { transform: none; }
   .tiles a:hover::before, .theme a:hover::before, .cards a:hover::before { transform: translateX(-180%) skewX(-18deg); }
 }
+
+/* 線状加熱の体験: 合格したお題に ✓、合格の間は一致度の色を変える、ヒントとお手本を使えない理由、低い画面では板を低く。計算の数字は語の途中で折り返さない */
+.lh__bar button.is-done::after { content: "✓"; margin-left: 4px; }
+.lh__box.is-cleared #lh-score { color: #ffb347; }
+.lh__grp > .lh__why { margin: 0 0 0 4px; }
+.lh__why[hidden] { display: none; }
+.phero__hud > span:not(.live) { white-space: nowrap; }
+@media (min-width: 961px) and (max-height: 800px) { .lh__box { height: 52vh; } }

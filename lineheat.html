@@ -84,21 +84,21 @@
   <section class="lh">
     <div class="news__head"><h1 class="news__ttl">線状加熱の体験<small>LINE HEATING</small></h1></div>
     <div class="lsim__box lh__box">
-      <canvas id="lh" aria-label="線状加熱の体験。板の上をなぞると加熱線を引けます"></canvas>
+      <canvas id="lh" role="img" aria-label="線状加熱の体験。板の上をなぞると加熱線を引けます"></canvas>
       <noscript><p class="lh__no">この体験には JavaScript が必要です。</p></noscript>
-      <p class="phero__hud"><span class="live">LIVE</span>簡易デモ　加熱した線 <b id="lh-lines">0</b> 本　最大たわみ <b id="lh-def">0</b> Δx　一致度 <b id="lh-score">-</b></p>
-      <p class="lh__msg" id="lh-msg"></p>
+      <p class="phero__hud"><span class="live">LIVE</span>簡易デモ　<span>加熱した線 <b id="lh-lines">0</b> 本</span>　<span>最大たわみ <b id="lh-def">0</b> Δx</span>　<span>一致度 <b id="lh-score">-</b></span></p>
+      <p class="lh__msg" id="lh-msg" role="status"></p>
     </div>
     <div class="lh__bar" id="lh-bar">
-      <div class="lh__grp"><span>お題</span><button type="button" data-goal="free">自由</button><button type="button" data-goal="cyl">円筒</button><button type="button" data-goal="saddle">鞍</button><button type="button" data-goal="twist">ねじれ</button></div>
-      <div class="lh__grp"><span>加熱する面</span><button type="button" data-side="1">表から</button><button type="button" data-side="-1">裏から</button></div>
-      <div class="lh__grp"><button type="button" data-act="hint">ヒント</button><button type="button" data-act="demo">お手本</button><button type="button" data-act="undo">1本戻す</button><button type="button" data-act="reset">最初から</button></div>
+      <div class="lh__grp" role="group" aria-labelledby="lh-g1"><span id="lh-g1">お題</span><button type="button" data-goal="free">自由</button><button type="button" data-goal="cyl">円筒</button><button type="button" data-goal="saddle"><ruby>鞍<rt>くら</rt></ruby></button><button type="button" data-goal="twist">ねじれ</button></div>
+      <div class="lh__grp" role="group" aria-labelledby="lh-g2"><span id="lh-g2">加熱する面</span><button type="button" data-side="1">表から</button><button type="button" data-side="-1">裏から</button></div>
+      <div class="lh__grp" role="group" aria-label="操作"><button type="button" data-act="hint" aria-describedby="lh-why">ヒント</button><button type="button" data-act="demo" aria-describedby="lh-why">お手本</button><button type="button" data-act="undo">1本戻す</button><button type="button" data-act="reset">最初から</button><span class="lh__why" id="lh-why">ヒントとお手本は、お題を選ぶと使えます</span></div>
     </div>
     <div class="lh__how">
       <div>
         <h2>あそび方</h2>
         <ol>
-          <li>板の上を指やマウスでなぞると、白い線が引かれます。</li>
+          <li>板の上を指やマウスでなぞると、白い線（裏からは水色の線）が引かれます。</li>
           <li>その線に沿ってバーナーが動き、板を加熱します。冷えると、加熱した面の側へ板が折れます。</li>
           <li>「裏から」に切り替えると、反対の向きに折れます。板の外をなぞると視点が回ります。</li>
           <li>お題を選ぶと、目標の形が橙の網で出ます。一致度が 80% になれば合格です。</li>

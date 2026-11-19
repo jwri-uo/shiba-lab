@@ -22,11 +22,11 @@
     saddle: [{ pts: [[2, 9], [45, 9]], side: 1 }, { pts: [[45, 18], [2, 18]], side: 1 }, { pts: [[16, 2], [16, 25]], side: -1 }, { pts: [[31, 25], [31, 2]], side: -1 }],
     twist: [{ pts: [[3, 2], [44, 25]], side: 1 }, { pts: [[44, 2], [3, 25]], side: -1 }]
   };
-  var TEXT = { free: '板の上をなぞると、その線をバーナーが加熱します。', goal: 'うすい橙の網が目標の形です。近づけてください。', done: '合格！ 目標の形になりました。' };
+  var TEXT = { free: '板の上をなぞると、その線をバーナーが加熱します。', goal: '板の上をなぞって加熱線を引き、うすい橙の網（目標の形）に近づけよう。一致度' + Math.round(VIEW.pass * 100) + '%で合格。迷ったらヒント。', done: '合格！ 目標の形になりました。', demo: 'お手本です。「最初から」を押して、自分でやってみよう。' };
 
   var nx = VIEW.nx, ny = VIEW.ny, n = nx * ny, M = new PlateModel(nx, ny);
   var goal = 'free', target = null, tnorm = 1, side = 1, queue = [], cur = null, draft = null, drag = null, undo = [];
-  var lines = 0, score = -1, cleared = false, hint = false, sparks = [];
+  var lines = 0, score = -1, cleared = false, hint = false, sparks = [], shown = false, passed = {};   // shown: お手本を見せている（合格にしない）
   var yaw = -0.5, pitch = 1.0, yawTo = -0.5, pitchTo = 1.0, W = 0, H = 0, dpr = 1;
   var PX = new Float32Array(n), PY = new Float32Array(n);
   var el = function (id) { return document.getElementById(id); };
@@ -81,7 +81,7 @@
   }
 
   function clearPlate() {
-    M = new PlateModel(nx, ny); queue = []; cur = null; draft = null; undo = []; lines = 0; cleared = false; sparks = [];
+    M = new PlateModel(nx, ny); queue = []; cur = null; draft = null; undo = []; lines = 0; cleared = false; sparks = []; shown = false; host.classList.remove('is-cleared');
   }
   function setGoal(name) {
     goal = name; clearPlate(); target = null;
@@ -99,11 +99,11 @@
     if (name === 'undo') {   // 加熱中や待ちの線があればそれも取り消して、最後に加熱を始めた線の前へ戻す
       queue = []; cur = null;
       var s = undo.pop();
-      if (s) { M.load(s); lines--; cleared = false; }
+      if (s) { M.load(s); lines--; cleared = false; host.classList.remove('is-cleared'); }
     }
     if (name === 'demo' && GOALS[goal]) {   // お手本: 目標の形を作った加熱線を、そのまま実演する
       clearPlate();
-      GOALS[goal].forEach(function (g) { queue.push({ pts: dense(g.pts), side: g.side }); });
+      GOALS[goal].forEach(function (g) { queue.push({ pts: dense(g.pts), side: g.side }); }); shown = true;
     }
   }
 
@@ -220,11 +220,11 @@
     var mx = 0, dd = 0;
     for (k = 0; k < n; k++) { var aw = w[k] < 0 ? -w[k] : w[k]; if (aw > mx) mx = aw; if (target) dd += (w[k] - target[k]) * (w[k] - target[k]); }
     score = target ? Math.max(0, 1 - Math.sqrt(dd) / tnorm) : -1;
-    if (target && !cleared && score >= VIEW.pass && !cur && !queue.length && M.hot === 0) { cleared = true; burst(CX, CY, 160); }
-    if (elLines) elLines.textContent = lines;
-    if (elDef) elDef.textContent = mx.toFixed(2);
-    if (elScore) elScore.textContent = target ? Math.round(score * 100) + '%' : '-';
-    if (elMsg) elMsg.textContent = cleared ? TEXT.done : target ? TEXT.goal : TEXT.free;
+    if (target && !cleared && !shown && score >= VIEW.pass && !cur && !queue.length && M.hot === 0) { cleared = true; passed[goal] = true; host.classList.add('is-cleared'); burst(CX, CY, 160); sync(); }
+    var tl = String(lines); if (elLines && elLines.textContent !== tl) elLines.textContent = tl;   // 同じなら書かない（読み上げが繰り返さない）
+    var td = mx.toFixed(2); if (elDef && elDef.textContent !== td) elDef.textContent = td;
+    var ts = target ? Math.round(score * 100) + '%' : '-'; if (elScore && elScore.textContent !== ts) elScore.textContent = ts;
+    var tm = cleared ? TEXT.done : shown && target ? TEXT.demo : target ? TEXT.goal : TEXT.free; if (elMsg && elMsg.textContent !== tm) elMsg.textContent = tm;
   }
 
   // 動くものがある間だけ描く（何も無くなったら止まり、操作があれば再開する）
@@ -283,11 +283,16 @@
         b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
       }
       if (d.act === 'demo' || d.act === 'hint') b.disabled = !GOALS[goal];
+      if (d.goal) b.classList.toggle('is-done', !!passed[d.goal]);   // 合格したお題に ✓
     });
+    var why = el('lh-why');   // ヒントとお手本が使えない理由（自由のとき）
+    if (why) why.hidden = !!GOALS[goal];
   }
   if (bar) bar.addEventListener('click', function (e) {
     var b = e.target.closest ? e.target.closest('button') : null;
     if (!b) return;
+    // お題を変えるとき、お手本を始めるときは板を消すので、自分で引いた線があれば先に聞く
+    if ((b.dataset.goal || b.dataset.act === 'demo') && !shown && (lines > 0 || queue.length || cur) && !window.confirm('今の板を消して切り替えますか？')) return;
     if (b.dataset.goal) { setGoal(b.dataset.goal); hint = false; }
     if (b.dataset.side) side = +b.dataset.side;
     if (b.dataset.act) act(b.dataset.act);
