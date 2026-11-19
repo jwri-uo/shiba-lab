@@ -2,46 +2,61 @@ name: サイトの自動生成
 
 # ページを直したり、お知らせを足したりして push すると、共通の枠・メニュー・お知らせの一覧などを自動で作り直す。
 # 編集する人が手元で Python を実行しなくて済むようにするための仕組み。
+# build.py の終了コード: 0 = 問題なし / 2 = 直す必要のある所があった（作り直せた分は反映して、最後に赤くする）
+#                        1 = 枠やメニューの問題か、思わぬエラー（何も反映せずに赤くする）
 
 on:
   push:
     branches: [main]
     paths:
-      - '*.html'            # ページやお知らせ
-      - '_frame/**'         # 共通の枠（frame.html）とメニューの定義（menu.txt）
+      - '*.html'                       # ページやお知らせ
+      - 'img/**'                       # 写真（お知らせの小さな画像の元）
+      - '_frame/**'                    # 共通の枠（frame.html）とメニューの定義（menu.txt）
       - 'build.py'
-  workflow_dispatch:        # 手動でも実行できるようにしておく
+      - '.github/workflows/build.yml'
+  workflow_dispatch:                   # 手動でも動かせる（push が断られて赤くなったときなど）
 
 permissions:
   contents: write
 
-concurrency:                # 続けて push されたときに衝突させない
+# 続けて push されたときは、重ねて動かさない。待ちは最新の1つだけが残り、古い待ちは取り消される
+# （灰色の「取り消し」の行になる）。ref: main なので、最後に動いた回が全体をまとめて作り直す
+concurrency:
   group: site-build
   cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
+          ref: main                    # push されたときのものではなく、動き始めた時点で最新の main を作り直す
           # PDF や動画（files/）は作り直しに要らないので取ってこない（約3GBあり、取ると遅い）
           sparse-checkout-cone-mode: false
           sparse-checkout: |
             /*
             !/files/
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
       - name: 画像を扱う部品を入れる（お知らせの小さな画像を作るのに使う）
-        run: pip install pillow
+        run: pip install "pillow==13.0.0"
 
       - name: 共通の枠と一覧を作り直す
-        run: python build.py --apply
+        id: build
+        run: |
+          set +e
+          python build.py --apply
+          code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          if [ "$code" != 0 ] && [ "$code" != 2 ]; then exit "$code"; fi
 
       - name: 変更があれば記録して反映
+        id: publish
         run: |
           if [ -z "$(git status --porcelain)" ]; then
             echo "更新の必要はありませんでした。"
@@ -51,4 +66,29 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           git commit -m "Rebuild the shared frame and the listings"
-          git push
+          for i in 1 2 3 4; do
+            if git push origin HEAD:main; then
+              echo "pushed=yes" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            [ "$i" = 4 ] && break
+            echo "途中でほかの push があったので、その上に重ねてから送り直します。"
+            git fetch origin main || { echo "GitHub から取ってこられませんでした。Actions の画面の Run workflow を押して、もう一度動かしてください。"; exit 1; }
+            if ! git rebase origin/main; then
+              git rebase --abort
+              echo "重ねられなかったので、ここでは止めます。後から来た push の作り直しが、全体を作り直します。"
+              exit 0
+            fi
+          done
+          echo "送り直しても入らなかったので止めます。Actions の画面で「サイトの自動生成」を選び、Run workflow を押して、もう一度動かしてください。"
+          exit 1
+
+      - name: 直す必要のある所があれば赤い印にする
+        if: steps.build.outputs.code == '2'
+        run: |
+          echo "build.py が、直す必要のある所を見つけました。"
+          if [ "${{ steps.publish.outputs.pushed }}" = "yes" ]; then
+            echo "作り直せたページは、もう反映してあります。"
+          fi
+          echo "上の『共通の枠と一覧を作り直す』を開くと、ファイル名と直し方が出ています。"
+          exit 1
