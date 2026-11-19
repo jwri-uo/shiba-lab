@@ -38,6 +38,8 @@
   var bctx = buf.getContext('2d'), img = bctx.createImageData(nx, ny), ctx = cv.getContext('2d');
   var W = 0, H = 0;
   var elStep = document.getElementById('sim-step'), elGrid = document.getElementById('sim-grid');
+  var hudAt = -1e9;   // 数字を書き換えた時刻（書き換えは毎秒4回まで）
+  function calm() { return !!(window.shibaMotion && window.shibaMotion.calm()); }
   if (elGrid) elGrid.textContent = nx + '×' + ny;
 
   function resize() {
@@ -76,8 +78,10 @@
     var tmp = T; T = T2; T2 = tmp; step++;
   }
 
-  function draw() {
-    var d = img.data, k, p, v;
+  // f: 前の描画から、60コマ/秒の何コマ分たったか（火花の動きを経過時間に合わせる）
+  function draw(f) {
+    f = f || 1;
+    var d = img.data, k, p, v, damp = Math.pow(0.96, f);
     for (k = 0, p = 0; k < n; k++, p += 4) {
       v = T[k] * 204; v = v > 255 ? 255 : v | 0;   // 204 = 255 / 1.25。温度の上限（1.25）がちょうど白になる
       d[p] = LUT[v * 3]; d[p + 1] = LUT[v * 3 + 1]; d[p + 2] = LUT[v * 3 + 2]; d[p + 3] = 255;
@@ -101,25 +105,33 @@
     ctx.fillStyle = g; ctx.fillRect(px - gr, py - gr, gr * 2, gr * 2);
     for (var s = sparks.length - 1; s >= 0; s--) {
       var q = sparks[s];
-      q.x += q.vx; q.y += q.vy; q.vx *= 0.96; q.vy *= 0.96; q.life -= 0.03;
+      q.x += q.vx * f; q.y += q.vy * f; q.vx *= damp; q.vy *= damp; q.life -= 0.03 * f;
       if (q.life <= 0) { sparks.splice(s, 1); continue; }
       ctx.strokeStyle = 'rgba(255,' + ((150 + 90 * q.life) | 0) + ',70,' + q.life.toFixed(2) + ')';
       ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(q.x - q.vx * 3, q.y - q.vy * 3); ctx.stroke();
     }
     ctx.globalCompositeOperation = 'source-over';
-    for (var m = 0; m < 3; m++) {
+    for (var m = 0; m < 3 * f; m++) {
       var a = Math.random() * 6.283, sp = (1 + Math.random() * 5) * sy * 0.35;
       sparks.push({ x: px, y: py, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1 });
     }
-    if (elStep) elStep.textContent = step;
+    var hn = performance.now();
+    if (elStep && hn - hudAt >= 250) { hudAt = hn; elStep.textContent = step; }
   }
 
-  function frame() {
-    if (running && !document.hidden) {
-      for (var s = 0; s < PARAM.sub; s++) { moveSource(); solve(); }
-      draw();
+  // 描画は毎秒30回まで。計算は 1/60 秒ごとに PARAM.sub ステップ分を、経過時間に合わせて進める
+  var raf = 0, lastDraw = 0;
+  function wake() { if (!raf && running && !document.hidden && !calm()) raf = requestAnimationFrame(frame); }
+  function frame(now) {
+    raf = 0;
+    if (!running || document.hidden || calm()) return;
+    if (now - lastDraw >= 32) {
+      var k = lastDraw ? Math.min(4, Math.max(1, Math.round((now - lastDraw) / 16.7))) : 2;
+      for (var s = 0; s < PARAM.sub * k; s++) { moveSource(); solve(); }
+      draw(k);
+      lastDraw = now;
     }
-    requestAnimationFrame(frame);
+    raf = requestAnimationFrame(frame);
   }
 
   host.addEventListener('pointermove', function (e) {
@@ -132,8 +144,9 @@
   resize();
   for (var w = 0; w < 260; w++) { moveSource(); solve(); }   // 開いた瞬間から熱の跡が見えるように、先に進めておく
   draw();
-  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  // 画面の外にあるときは計算を止める（電池の節約）
-  if ('IntersectionObserver' in window) new IntersectionObserver(function (es) { running = es[0].isIntersecting; }).observe(cv);
-  requestAnimationFrame(frame);
+  // 画面の外にあるとき、裏のタブ、動きを止めている間は計算しない（電池の節約）
+  if ('IntersectionObserver' in window) new IntersectionObserver(function (es) { running = es[0].isIntersecting; wake(); }).observe(cv);
+  document.addEventListener('visibilitychange', wake);
+  document.addEventListener('shiba:motion', function () { hudAt = -1e9; draw(); wake(); });
+  wake();
 })();

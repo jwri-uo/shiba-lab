@@ -597,3 +597,17 @@ html { overflow-x: hidden; }
   .doc--awards td:nth-child(4)::before { content: "題目："; color: var(--sub); }
 }
 .doc__toc a span { margin-left: .5em; color: var(--sub); font-family: var(--en); }   /* 研究動画の目次の長さ */
+
+/* 「動きを止める」ボタン（fx.js がヘッダーに置く）と、止めているとき（html.is-still）の見た目 */
+.motion-btn { position: absolute; z-index: 3; right: 0; top: 10px; -webkit-appearance: none; appearance: none; padding: 3px 10px; border: 1px solid rgba(109,182,255,.6); border-radius: 0; background: rgba(5,16,40,.75); color: var(--white); font: inherit; font-size: 12px; line-height: 1.6; cursor: pointer; }
+.motion-btn:hover { border-color: var(--memorial-hi); color: var(--memorial-hi); }
+.is-still .hero__slide, .is-still .hero__slides.is-ready .hero__slide, .is-still .weldbar i, .is-still .gn::before, .is-still .gn::after { animation: none; }
+.is-still .gn::after { opacity: 0; }
+.is-still .tiles img, .is-still .theme img, .is-still .tiles a::before, .is-still .theme a::before, .is-still .cards a::before { transition: none; }
+.is-still .tiles a:hover img, .is-still .theme a:hover img { transform: none; }
+.is-still .tiles a:hover::before, .is-still .theme a:hover::before, .is-still .cards a:hover::before { transform: translateX(-180%) skewX(-18deg); }
+@media (prefers-reduced-motion: reduce) {
+  .tiles img, .theme img, .side__grp summary::after, .tiles a::before, .theme a::before, .cards a::before { transition: none; }
+  .tiles a:hover img, .theme a:hover img { transform: none; }
+  .tiles a:hover::before, .theme a:hover::before, .cards a:hover::before { transform: translateX(-180%) skewX(-18deg); }
+}

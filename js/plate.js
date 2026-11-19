@@ -44,6 +44,8 @@
   }
 
   var elStep = document.getElementById('plate-step'), elPass = document.getElementById('plate-pass'), elDef = document.getElementById('plate-def');
+  var hudAt = -1e9;   // 数字を書き換えた時刻（書き換えは毎秒4回まで）
+  function calm() { return !!(window.shibaMotion && window.shibaMotion.calm()); }
 
   function reset() {
     for (var k = 0; k < n; k++) { T[k] = 0; peak[k] = 0; w[k] = 0; }
@@ -191,20 +193,30 @@
     }
     ctx.globalCompositeOperation = 'source-over';
 
-    var mx = 0;
-    for (k = 0; k < n; k++) { var aw = w[k] < 0 ? -w[k] : w[k]; if (aw > mx) mx = aw; }
-    if (elStep) elStep.textContent = step;
-    if (elPass) elPass.textContent = rest > 0 ? '冷却中' : (pass + 1) + ' / ' + LINES.length;
-    if (elDef) elDef.textContent = mx.toFixed(2);
+    var hn = performance.now();
+    if (hn - hudAt >= 250) {
+      hudAt = hn;
+      var mx = 0;
+      for (k = 0; k < n; k++) { var aw = w[k] < 0 ? -w[k] : w[k]; if (aw > mx) mx = aw; }
+      if (elStep) elStep.textContent = step;
+      if (elPass) elPass.textContent = rest > 0 ? '冷却中' : (pass + 1) + ' / ' + LINES.length;
+      if (elDef) elDef.textContent = mx.toFixed(2);
+    }
   }
 
-  var tick = 0;
-  function frame() {
-    if (running && !document.hidden && (++tick & 1)) {
-      for (var s = 0; s < PARAM.sub; s++) solve();
+  // 描画は毎秒30回まで。画面の速さ（60・120コマ/秒）によらず、経過時間に合わせて計算を進める
+  var raf = 0, lastDraw = 0, busy = false;   // busy: 止めているときに、冷えた状態を計算している途中
+  function wake() { if (!raf && !busy && running && !document.hidden && !calm()) raf = requestAnimationFrame(frame); }
+  function frame(now) {
+    raf = 0;
+    if (!running || document.hidden || calm()) return;
+    if (now - lastDraw >= 32) {
+      var k = lastDraw ? Math.min(3, Math.max(1, Math.round((now - lastDraw) / 33.3))) : 1;
+      for (var s = 0; s < PARAM.sub * k; s++) solve();
       draw();
+      lastDraw = now;
     }
-    requestAnimationFrame(frame);
+    raf = requestAnimationFrame(frame);
   }
 
   // マウスを乗せると視点が動く（指での操作ではスクロールの邪魔をしない）
@@ -215,29 +227,30 @@
     pitchTo = 1.0 + ((e.clientY - r.top) / r.height - 0.5) * 0.2;
   });
   host.addEventListener('pointerleave', function () { yawTo = -0.5; pitchTo = 1.0; });
-  var busy = false;   // 動きを減らす設定で、冷えた状態を計算している途中
   window.addEventListener('resize', function () { resize(); if (!busy) draw(); });   // 大きさを変えると canvas が空になるので、すぐ描き直す
 
   resize();
-  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    // 溶接が終わって冷えた状態を1枚だけ描く。一度に計算すると画面が固まるので、板が画面に近づいてから少しずつ進める
+  if (calm()) {
+    // 動きを止めているときは、溶接が終わって冷えた状態を1枚だけ描く。一度に計算すると画面が固まるので、板が画面に近づいてから少しずつ進める
     var left = 4000;
     var finished = function () { return left <= 0 || (rest > 0 && rest < 150); };
     var chunk = function () {
       busy = true;
       for (var c = 0; c < 30 && !finished(); c++, left--) solve();
-      if (finished()) { busy = false; draw(); } else setTimeout(chunk, 0);
+      if (finished()) { busy = false; hudAt = -1e9; draw(); wake(); } else setTimeout(chunk, 0);
     };
     draw();
     if ('IntersectionObserver' in window) {
       var near = new IntersectionObserver(function (es) { if (es[0].isIntersecting) { near.disconnect(); chunk(); } }, { rootMargin: '300px' });
       near.observe(cv);
     } else chunk();
-    return;
+  } else {
+    for (var w0 = 0; w0 < 150; w0++) solve();   // 開いた瞬間から熱の跡が見えるように、先に進めておく
+    draw();
   }
-  for (var w0 = 0; w0 < 150; w0++) solve();   // 開いた瞬間から熱の跡が見えるように、先に進めておく
-  draw();
-  // 画面の外にあるときは計算を止める（電池の節約）
-  if ('IntersectionObserver' in window) new IntersectionObserver(function (es) { running = es[0].isIntersecting; }).observe(cv);
-  requestAnimationFrame(frame);
+  // 画面の外にあるとき、裏のタブ、動きを止めている間は計算しない（電池の節約）
+  if ('IntersectionObserver' in window) new IntersectionObserver(function (es) { running = es[0].isIntersecting; wake(); }).observe(cv);
+  document.addEventListener('visibilitychange', wake);
+  document.addEventListener('shiba:motion', function () { if (!busy) { hudAt = -1e9; draw(); } wake(); });
+  wake();
 })();

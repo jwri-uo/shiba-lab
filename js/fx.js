@@ -6,6 +6,33 @@
    動きを減らす設定の端末では何もしない。JavaScript が動かなくてもページは普通に読める。 */
 (function () {
   'use strict';
+  // 動きを止めるかどうかは1か所で決める: 端末の「動きを減らす」設定か、ヘッダーの「動きを止める」ボタン（全ページで覚える）。
+  // plate.js・sim.js・lineheat.js も window.shibaMotion.calm() を見て、合図 shiba:motion で止める／再開する
+  var reduceMq = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+  var userOff = false;
+  try { userOff = localStorage.getItem('shiba-motion') === 'off'; } catch (e) { /* 覚えられない環境では毎回動く */ }
+  var motion = window.shibaMotion = { calm: function () { return userOff || !!(reduceMq && reduceMq.matches); } };
+  var motionChanged = function () {
+    document.documentElement.classList.toggle('is-still', motion.calm());
+    document.dispatchEvent(new Event('shiba:motion'));
+  };
+  document.documentElement.classList.toggle('is-still', motion.calm());
+  if (reduceMq && reduceMq.addEventListener) reduceMq.addEventListener('change', motionChanged);
+  var hd = document.querySelector('.hd');
+  if (hd && !(reduceMq && reduceMq.matches)) {
+    var mb = document.createElement('button');
+    mb.type = 'button';
+    mb.className = 'motion-btn';
+    var label = function () { mb.textContent = userOff ? '動きを再開' : '動きを止める'; };
+    label();
+    mb.addEventListener('click', function () {
+      userOff = !userOff;
+      try { if (userOff) localStorage.setItem('shiba-motion', 'off'); else localStorage.removeItem('shiba-motion'); } catch (e) { /* 覚えられなくても、このページでは止まる */ }
+      label();
+      motionChanged();
+    });
+    hd.appendChild(mb);
+  }
   // 幅の狭い画面では、左のメニューは分類の名前だけにして、本文をすぐ読めるようにする（押せば開く）
   if (window.matchMedia && window.matchMedia('(max-width: 960px)').matches) {
     Array.prototype.forEach.call(document.querySelectorAll('.side__grp[open]'), function (d) { d.removeAttribute('open'); });
@@ -38,7 +65,7 @@
     window.addEventListener('resize', function () { cancelAnimationFrame(wideFrame); wideFrame = requestAnimationFrame(markWide); });
     document.addEventListener('toggle', markWide, true);   // たたんだ表を開いたとき
   }
-  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (reduceMq && reduceMq.matches) return;
 
   /* ---- 0) トップの写真の2枚目以降は、ページを読み終えてから読む（1枚目を早く出すため）。届いたら切り替えを始める ---- */
   var lateSlides = document.querySelectorAll('.hero__slides img[data-src]');
@@ -74,7 +101,7 @@
   }
 
   /* ---- 3) スクロールに合わせて、画面の上端を溶接線が走る ---- */
-  var bar = document.createElement('div'), waiting = false;
+  var bar = document.createElement('div'), waiting = false, offT = 0;
   bar.className = 'weldbar';
   bar.setAttribute('aria-hidden', 'true');
   bar.innerHTML = '<b></b><i></i>';
@@ -84,7 +111,9 @@
     var max = document.documentElement.scrollHeight - window.innerHeight;
     var p = max > 0 ? Math.min(1, window.scrollY / max) : 0;
     bar.style.setProperty('--p', p.toFixed(4));
-    bar.classList.toggle('is-on', p > 0.002);   // いちばん上では先端の光を出さない
+    clearTimeout(offT);   // 先端の光はスクロールしている間と、止まって0.3秒だけ出す（いちばん上では出さない）
+    bar.classList.toggle('is-on', p > 0.002);
+    if (p > 0.002) offT = setTimeout(function () { bar.classList.remove('is-on'); }, 300);
   }
   window.addEventListener('scroll', function () { if (!waiting) { waiting = true; requestAnimationFrame(progress); } }, { passive: true });
   progress();
@@ -109,7 +138,9 @@
   cv.className = 'fx-sparks';
   cv.setAttribute('aria-hidden', 'true');
   page.appendChild(cv);
-  var ctx = cv.getContext('2d'), parts = [], W = 0, H = 0, dpr = 1, on = true;
+  var ctx = cv.getContext('2d'), parts = [], W = 0, H = 0, dpr = 1, on = true, raf = 0, last = 0;
+  // 画面の外、裏のタブ、動きを止めている間は、次のコマを予約しない
+  function wake() { if (!raf && on && !document.hidden && !motion.calm()) { last = 0; raf = requestAnimationFrame(tick); } }
 
   function fit() {
     dpr = Math.min(window.devicePixelRatio || 1, 1.5);
@@ -118,14 +149,18 @@
     H = cv.height = Math.round(r.height * dpr);
   }
 
-  function tick() {
-    if (on && !document.hidden) {
+  function tick(now) {
+    raf = 0;
+    if (!on || document.hidden || motion.calm()) { ctx.clearRect(0, 0, W, H); parts.length = 0; return; }
+    var f = last ? Math.min(now - last, 50) / 16.7 : 1, damp = Math.pow(0.985, f);   // 60コマ/秒のときを1として、経過時間で進める
+    last = now;
+    {
       var c = cv.getBoundingClientRect(), t = torch.getBoundingClientRect();
       // 火花の出どころ = 溶接の画像の中の光っている点（画像の左から49%、上から58%）
       var ox = (t.left + t.width * 0.49 - c.left) * dpr, oy = (t.top + t.height * 0.58 - c.top) * dpr;
       ctx.clearRect(0, 0, W, H);
       if (t.height > 0) {
-        for (var m = 0; m < 2; m++) {
+        for (var m = 0; m < 2 * f; m++) {
           var a = Math.random() * 6.283, sp = (2 + Math.random() * 6) * dpr;
           parts.push({ x: ox, y: oy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 1.2 * dpr, life: 1, w: 0.6 + Math.random() * 1.2 });
         }
@@ -134,19 +169,21 @@
       ctx.lineCap = 'round';
       for (var i = parts.length - 1; i >= 0; i--) {
         var p = parts[i];
-        p.vy += 0.12 * dpr; p.vx *= 0.985; p.vy *= 0.985; p.x += p.vx; p.y += p.vy; p.life -= 0.016;
+        p.vy += 0.12 * dpr * f; p.vx *= damp; p.vy *= damp; p.x += p.vx * f; p.y += p.vy * f; p.life -= 0.016 * f;
         if (p.life <= 0 || p.y > H) { parts.splice(i, 1); continue; }
         ctx.strokeStyle = 'rgba(255,' + ((140 + 100 * p.life) | 0) + ',' + ((40 + 120 * p.life * p.life) | 0) + ',' + p.life.toFixed(2) + ')';
         ctx.lineWidth = p.w * dpr;
         ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx * 2.5, p.y - p.vy * 2.5); ctx.stroke();
       }
     }
-    requestAnimationFrame(tick);
+    raf = requestAnimationFrame(tick);
   }
 
   fit();
   window.addEventListener('resize', fit);
   // 画面の外にあるときは描かない（電池の節約）
-  if ('IntersectionObserver' in window) new IntersectionObserver(function (es) { on = es[0].isIntersecting; }).observe(cv);
-  requestAnimationFrame(tick);
+  if ('IntersectionObserver' in window) new IntersectionObserver(function (es) { on = es[0].isIntersecting; wake(); }).observe(cv);
+  document.addEventListener('visibilitychange', wake);
+  document.addEventListener('shiba:motion', wake);
+  wake();
 })();

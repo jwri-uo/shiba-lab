@@ -141,7 +141,7 @@
     ctx.closePath(); ctx.fill(); ctx.stroke();
   }
   function burst(x, y, count) {
-    if (calm) return;
+    if (calm || (window.shibaMotion && window.shibaMotion.calm())) return;
     for (var m = 0; m < count; m++) {
       var an = Math.random() * 6.283, v = (1 + Math.random() * (count > 4 ? 9 : 3.5)) * dpr;
       sparks.push({ x: x, y: y, vx: Math.cos(an) * v, vy: Math.sin(an) * v * 0.6 - 2 * dpr, life: 1 });
