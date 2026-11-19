@@ -448,7 +448,7 @@ def related_html(news, spots, words):
     hit = [n for n in news if rx.search(fold(n['title']))]
     out = ''
     if rel:
-        out += '<h2>関連するページ</h2>\n<ul class="newslist">\n' + ''.join(f'<li><a href="{h}"><span class="newslist__ttl">{t}</span></a></li>\n' for h, t in rel) + '</ul>\n'
+        out += '<h2>関連するページ</h2>\n<ul class="newslist">\n' + ''.join(f'<li><a href="{h}"><span class="newslist__ttl">{html.escape(t, quote=False)}</span></a></li>\n' for h, t in rel) + '</ul>\n'
     out += f'<h2>関連するお知らせ<small>（題名から自動で集めたもの。{len(hit)}件）</small></h2>\n'
     if not hit:
         return out + '<p>関連するお知らせは、まだありません。</p>'

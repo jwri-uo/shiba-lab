@@ -423,7 +423,7 @@ html { overflow-x: hidden; }
   .doc table { min-width: 620px; font-size: 12.5px; }
 }
 
-/* 長いページの目次（見出しが4つ以上あるページに自動で付く） */
+/* 長いページの目次（ページの本文に手で書く。お知らせの一覧の年の目次だけは build.py が作る） */
 .doc__toc ul { list-style: none; margin: 0 0 1.8em; padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 8px 10px; border: 1px solid rgba(109,182,255,.3); background: rgba(5,16,40,.5); }
 .doc__toc a { display: block; padding: 2px 14px; border: 1px solid rgba(109,182,255,.5); font-size: 13px; color: #e9f0fb; text-decoration: none; }
 .doc__toc a:hover { border-color: #cfe6ff; background: rgba(47,127,232,.35); color: #fff; }
@@ -596,3 +596,4 @@ html { overflow-x: hidden; }
   .doc--awards td:nth-child(3)::before { content: "賞："; color: var(--sub); }
   .doc--awards td:nth-child(4)::before { content: "題目："; color: var(--sub); }
 }
+.doc__toc a span { margin-left: .5em; color: var(--sub); font-family: var(--en); }   /* 研究動画の目次の長さ */
