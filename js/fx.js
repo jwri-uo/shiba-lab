@@ -10,6 +10,10 @@
   if (window.matchMedia && window.matchMedia('(max-width: 960px)').matches) {
     Array.prototype.forEach.call(document.querySelectorAll('.side__grp[open]'), function (d) { d.removeAttribute('open'); });
   }
+  // 狭い画面では上の帯が横に動くので、今のページの項目が見える所まで送る。Tab で選んだ項目も見える所へ送る
+  var gnUl = document.querySelector('.gn ul'), gnCur = document.querySelector('.gn .is-current');
+  if (gnUl && gnCur && gnCur.offsetLeft + gnCur.offsetWidth > gnUl.clientWidth - 32) gnUl.scrollLeft = gnCur.offsetLeft - 24;
+  if (gnUl) gnUl.addEventListener('focusin', function (e) { if (gnUl.scrollWidth > gnUl.clientWidth) e.target.scrollIntoView({ block: 'nearest', inline: 'nearest' }); });
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
   /* ---- 1) 画面に入ったら順に表示 ---- */

@@ -22,7 +22,8 @@ body {
   overflow-x: hidden;
 }
 a { color: inherit; }
-a:focus-visible { outline: 2px solid var(--memorial-hi); outline-offset: 2px; }
+a:focus-visible, button:focus-visible, summary:focus-visible, video:focus-visible { outline: 2px solid var(--memorial-hi); outline-offset: 2px; }
+.gn a:focus-visible, .side :focus-visible { outline-offset: -3px; }   /* 横に動く帯と縦に動くメニューの中は、枠が切れないよう内側に出す */
 img { max-width: 100%; height: auto; vertical-align: middle; }
 .fa { width: 1.25em; text-align: center; }
 .page { position: relative; max-width: 1240px; margin: 0 auto; padding: 0 20px; }
@@ -131,10 +132,16 @@ img { max-width: 100%; height: auto; vertical-align: middle; }
   .page { padding: 0 12px; }
   .beam { display: none; }
   .hd__torch { right: -100px; top: -60px; width: 280px; opacity: .7; }
-  .hd__logo, .hd__univ, .hd__inst, .hd__sub { display: none; }
+  .hd__logo, .hd__sub { display: none; }
+  .hd__name { flex-wrap: wrap; gap: 0 10px; }
+  .hd__univ, .hd__inst { font-size: 13px; line-height: 1.5; font-weight: 700; letter-spacing: .04em; }
+  .hd__univ small, .hd__inst small { display: none; }
+  .hd__inst { padding-left: 10px; }
+  .hd__lab { flex: 0 0 100%; }
   .hd__lab { padding-left: 0; border-left: 0; }
   .hd__lab b { font-size: 28px; }
-  .gn ul { overflow-x: auto; justify-content: flex-start; }
+  .gn ul { overflow-x: auto; justify-content: flex-start; padding-right: 32px; scroll-padding-right: 32px;
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent); }
   .gn a { height: 42px; padding: 0 12px; font-size: 13px; }
   .gn .is-current a { padding: 0 22px; }
   .hero { display: block; min-height: 0; }
@@ -204,7 +211,7 @@ img { max-width: 100%; height: auto; vertical-align: middle; }
 }
 
 /* ヘッダー右上の溶接の画像（端をぼかして地になじませる） */
-.hd__torch { right: 50px; top: -104px; width: 450px;
+.hd__torch { right: clamp(-90px, calc(100vw - 1050px), 50px); top: -104px; width: 450px;   /* 幅 961〜1100px では右へずらし、英語の所属名の後ろから外す */
   -webkit-mask-image: radial-gradient(ellipse 50% 44% at 49% 58%, #000 40%, transparent 100%);
           mask-image: radial-gradient(ellipse 50% 44% at 49% 58%, #000 40%, transparent 100%); }
 @media (max-width: 960px) { .hd__torch { right: -130px; top: -78px; width: 320px; opacity: .75; } }
@@ -216,7 +223,7 @@ img { max-width: 100%; height: auto; vertical-align: middle; }
 :root { --en: "Barlow", "Noto Sans JP", "游ゴシック", YuGothic, "Hiragino Kaku Gothic ProN", "メイリオ", Meiryo, sans-serif; }
 .hd__univ small, .hd__inst small, .hd__lab span, .hd__lab small, .hd__sub, .hero__en, .news__ttl small, .news__more, .cards__meta, .theme__en, .tiles span, .phero__ttl small, .phero__hud, .ft { font-family: var(--en); }
 .hd__lab span { font-weight: 500; letter-spacing: .06em; }
-.hd__lab small { font-weight: 500; font-size: 11px; }
+.hd__lab small { font-weight: 500; font-size: 11px; text-shadow: 0 0 2px #061330, 0 0 4px #061330, 0 0 8px #061330; }
 .hero__en, .news__ttl small, .phero__ttl small { font-weight: 600; text-transform: uppercase; }
 .news__ttl small { font-size: 14px; letter-spacing: .26em; color: #9fd0ff; }
 .cards__meta { font-weight: 600; font-size: 15px; letter-spacing: .06em; font-variant-numeric: tabular-nums; }
@@ -547,3 +554,22 @@ html { overflow-x: hidden; }
   .doc--ob td:first-child { width: 104px; }
   .doc--ob td img { width: 104px; height: 130px; }
 }
+
+/* キーボードで選んだ所の枠、本文へ移動するリンク、狭い画面と動画の見え方 */
+.gn .is-current a:focus-visible { outline-color: #fff; outline-offset: -4px; }
+.tiles li:has(> a:focus-visible) { padding: 3px; margin: -2px; background: #fff; }
+.tiles a:focus-visible img { transform: scale(1.05); }
+.news__more:has(> a:focus-visible) { background: #fff; }
+.news__more a:focus-visible { background: #fff; color: var(--midnight); }
+.skip { position: absolute; z-index: 60; left: 12px; top: -60px; padding: 6px 14px; background: #fff; color: var(--midnight); font-weight: 700; text-decoration: none; }
+.skip:focus { top: 8px; }
+.skip-to { position: absolute; }   /* 左のメニューと本文の段組みの中に置くので、場所を取らないようにする */
+.skip-to:focus, .hero:focus { outline: none; }
+.phero__ttl, .phero__lead { text-shadow: 0 1px 8px #061330, 0 0 2px #061330, 0 0 4px #061330; }
+.doc video { height: auto; }
+.doc video.is-tall { width: auto; max-width: min(360px, 100%); max-height: 80vh; }
+.doc hr { border: 0; border-top: 1px solid rgba(109,182,255,.3); margin: 1.6em 0; }
+@media (max-width: 960px) {
+  .phero::after { background: linear-gradient(180deg, transparent 0%, transparent 28%, rgba(6,19,48,.85) 50%, rgba(6,19,48,.9) 100%); }
+}
+@media (max-width: 960px) and (max-height: 500px) { .lh__box { height: 62vh; height: 62svh; } }

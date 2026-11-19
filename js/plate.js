@@ -215,12 +215,24 @@
     pitchTo = 1.0 + ((e.clientY - r.top) / r.height - 0.5) * 0.2;
   });
   host.addEventListener('pointerleave', function () { yawTo = -0.5; pitchTo = 1.0; });
-  window.addEventListener('resize', resize);
+  var busy = false;   // 動きを減らす設定で、冷えた状態を計算している途中
+  window.addEventListener('resize', function () { resize(); if (!busy) draw(); });   // 大きさを変えると canvas が空になるので、すぐ描き直す
 
   resize();
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    for (var g0 = 0; g0 < 4000 && !(rest > 0 && rest < 150); g0++) solve();   // 溶接が終わって冷えた状態を1枚だけ描く
+    // 溶接が終わって冷えた状態を1枚だけ描く。一度に計算すると画面が固まるので、板が画面に近づいてから少しずつ進める
+    var left = 4000;
+    var finished = function () { return left <= 0 || (rest > 0 && rest < 150); };
+    var chunk = function () {
+      busy = true;
+      for (var c = 0; c < 30 && !finished(); c++, left--) solve();
+      if (finished()) { busy = false; draw(); } else setTimeout(chunk, 0);
+    };
     draw();
+    if ('IntersectionObserver' in window) {
+      var near = new IntersectionObserver(function (es) { if (es[0].isIntersecting) { near.disconnect(); chunk(); } }, { rootMargin: '300px' });
+      near.observe(cv);
+    } else chunk();
     return;
   }
   for (var w0 = 0; w0 < 150; w0++) solve();   // 開いた瞬間から熱の跡が見えるように、先に進めておく

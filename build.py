@@ -158,8 +158,14 @@ def join_lines(s):
 
 
 def text_of(s):
-    """題名などの文字だけを取り出して、HTML に入れられる形にする（タグを外し、改行を詰める）"""
+    """題名などの文字だけを取り出して、HTML に入れられる形にする（<br> を改行にしてタグを外し、改行を詰める）"""
+    s = re.sub(r'<br\b[^>]*>', NL, s, flags=re.I)
     return html.escape(re.sub(r'[ \t]+', ' ', html.unescape(re.sub(r'<[^>]+>', '', join_lines(s)))).strip(), quote=False)
+
+
+def short(s, n):
+    """n 字より長い文を、n 字に収まるよう切って「…」を付ける"""
+    return s if len(s) <= n else s[:n - 1].rstrip() + '…'
 
 
 def fold(s):
@@ -254,6 +260,8 @@ def bar_html(name):
 
 def side_html(name):
     cur, opened = side_current(name), side_open(name)
+    if opened is None and not any(it['file'] == cur for _, its in GROUPS for it in its):   # どの分類にも無いページ（お知らせなど）では、最初の分類を開いておく
+        opened = GROUPS[0][0]
     out = '<aside class="side" id="pages" aria-label="ページの一覧">\n'
     for title, items in GROUPS:
         is_open = title == opened or any(it['file'] == cur for it in items)
@@ -262,7 +270,7 @@ def side_html(name):
             a = link(it).replace('">', '" class="is-current" aria-current="page">', 1) if it['file'] == cur else link(it)
             out += f'          <li>{a}</li>\n'
         out += '        </ul>\n      </details>\n'
-    return out + '    </aside>'
+    return out + '    </aside>\n    <div class="skip-to" id="honbun" tabindex="-1"></div>'   # 枠の「本文へ移動」の飛び先（メニューの後ろ）
 
 
 def top_list_html():
@@ -608,7 +616,7 @@ def rebuild(name, s, ctx):
     h1 = H1_RX.search(body)
     h1_text = text_of(re.sub(r'<small\b.*?</small>', '', h1.group(1), flags=re.S | re.I)) if h1 else ''
     if art and text_of(art.group(1)):
-        title = text_of(art.group(1))[:60] + SUFFIX
+        title = html.escape(short(html.unescape(text_of(art.group(1))), 60), quote=False) + SUFFIX   # 文字に戻してから切る（&amp; の途中で切らない）
     elif h1_text:
         title = h1_text + SUFFIX
     for name_r in REGIONS:
@@ -623,7 +631,10 @@ def rebuild(name, s, ctx):
                       lambda r: r.group(1) + NL + ctx['related'](words_of(r.group(2))) + NL + r.group(3), body, flags=re.S)
     vals = {'{{題名}}': title, '{{自動の行}}': auto_head(name, title, body, ctx['by_file']).rstrip(NL),
             '{{このページだけの行}}': ''.join(l + NL for l in extra), '{{帯}}': bar_html(name), '{{本文}}': body}
-    return re.sub(r'\{\{(?:題名|自動の行|このページだけの行|帯|本文)\}\}', lambda m: vals[m.group(0)], ctx['frame'])   # 1回で置き換える（題名に {{本文}} と書いてあっても広がらない）
+    out = re.sub(r'\{\{(?:題名|自動の行|このページだけの行|帯|本文)\}\}', lambda m: vals[m.group(0)], ctx['frame'])   # 1回で置き換える（題名に {{本文}} と書いてあっても広がらない）
+    if name == '404.html':   # 404 は <base> でサイトの頭を基準にしているので、#honbun がトップへの移動になる。本文へ移動のリンクは外す
+        out = re.sub(r'<a class="skip"[^\n]*\n', '', out, count=1)
+    return out
 
 
 def cell(x):

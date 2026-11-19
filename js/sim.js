@@ -127,7 +127,7 @@
     pointer = { x: (e.clientX - r.left) / r.width * nx, y: (e.clientY - r.top) / r.height * ny };
   });
   host.addEventListener('pointerleave', function () { pointer = null; });
-  window.addEventListener('resize', resize);
+  window.addEventListener('resize', function () { resize(); draw(); });   // 大きさを変えると canvas が空になるので、すぐ描き直す
 
   resize();
   for (var w = 0; w < 260; w++) { moveSource(); solve(); }   // 開いた瞬間から熱の跡が見えるように、先に進めておく
