@@ -419,7 +419,7 @@ def latest_html(news):
     out = ''
     for n in news[:6]:
         pic = cut(n, 'nt-', (800, 380)) or 'img/tile-alt-torch.jpg'
-        out += (f'      <li><a href="{n["file"]}"><img src="{pic}" alt=""><div class="cards__body"><p class="cards__meta">{meta(n)}</p>'
+        out += (f'      <li><a href="{n["file"]}"><img src="{pic}" alt="" loading="lazy" decoding="async"><div class="cards__body"><p class="cards__meta">{meta(n)}</p>'
                 f'<p class="cards__ttl">{n["title"]}</p></div></a></li>\n')
     return out.rstrip(NL)
 

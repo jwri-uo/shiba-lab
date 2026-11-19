@@ -14,7 +14,42 @@
   var gnUl = document.querySelector('.gn ul'), gnCur = document.querySelector('.gn .is-current');
   if (gnUl && gnCur && gnCur.offsetLeft + gnCur.offsetWidth > gnUl.clientWidth - 32) gnUl.scrollLeft = gnCur.offsetLeft - 24;
   if (gnUl) gnUl.addEventListener('focusin', function (e) { if (gnUl.scrollWidth > gnUl.clientWidth) e.target.scrollIntoView({ block: 'nearest', inline: 'nearest' }); });
+  // 横に動かせる表には、右の端の影と「表は横に動かせます」を出し、キーボードでも動かせるようにする
+  var markWide = function () {
+    Array.prototype.forEach.call(document.querySelectorAll('.doc__scroll'), function (d) {
+      var wide = d.scrollWidth > d.clientWidth + 2, hint = d.previousElementSibling;
+      d.classList.toggle('is-wide', wide);
+      if (!hint || !hint.classList.contains('doc__hint')) {
+        if (!wide) return;
+        hint = document.createElement('p');
+        hint.className = 'doc__hint';
+        hint.setAttribute('aria-hidden', 'true');
+        hint.textContent = '表は横に動かせます →';
+        d.parentNode.insertBefore(hint, d);
+      }
+      hint.hidden = !wide;
+      if (wide) { d.tabIndex = 0; d.setAttribute('role', 'region'); d.setAttribute('aria-label', '表（横に動かせます）'); }
+      else { d.removeAttribute('tabindex'); d.removeAttribute('role'); d.removeAttribute('aria-label'); }
+    });
+  };
+  if (document.querySelector('.doc__scroll')) {
+    markWide();
+    var wideFrame = 0;
+    window.addEventListener('resize', function () { cancelAnimationFrame(wideFrame); wideFrame = requestAnimationFrame(markWide); });
+    document.addEventListener('toggle', markWide, true);   // たたんだ表を開いたとき
+  }
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  /* ---- 0) トップの写真の2枚目以降は、ページを読み終えてから読む（1枚目を早く出すため）。届いたら切り替えを始める ---- */
+  var lateSlides = document.querySelectorAll('.hero__slides img[data-src]');
+  if (lateSlides.length) {
+    var startSlides = function () {
+      var left = lateSlides.length;
+      var one = function () { if (--left === 0) document.querySelector('.hero__slides').classList.add('is-ready'); };
+      Array.prototype.forEach.call(lateSlides, function (im) { im.onload = im.onerror = one; im.src = im.getAttribute('data-src'); });
+    };
+    if (document.readyState === 'complete') startSlides(); else window.addEventListener('load', startSlides);
+  }
 
   /* ---- 1) 画面に入ったら順に表示 ---- */
   var targets = document.querySelectorAll('.tiles li, .cards li, .theme, .news__head');
