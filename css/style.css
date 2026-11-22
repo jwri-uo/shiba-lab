@@ -32,6 +32,7 @@ img { max-width: 100%; height: auto; vertical-align: middle; }
 .beam { position: absolute; pointer-events: none; z-index: 0; height: 3px; border-radius: 3px; background: linear-gradient(90deg, transparent, #9fd2ff 40%, #ffffff 55%, #6db6ff 70%, transparent); box-shadow: 0 0 18px 4px rgba(79, 160, 255, .55); }
 .beam--soft { height: 90px; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(47,127,232,.35), transparent 70%); box-shadow: none; }
 .beams { position: relative; height: 0; }   /* トップの写真の下の光の筋は、写真の下端から測る（写真の高さが変わる画面でも見出しを横切らない） */
+@media (min-width: 961px) { .beams .beam:not(:first-child) { translate: 0 min(0px, calc((100vw - 1280px) * .147)); } }   /* 幅が狭くタイルが低い画面では、タイルが低くなった分だけ筋を上へ（お知らせの見出しにかけない） */
 
 /* ヘッダー */
 .hd { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 18px 0 16px; z-index: 2; }
@@ -475,11 +476,16 @@ html { overflow-x: hidden; }
   .main .theme-grid--4 .theme__jp { font-size: 13.5px; }
   .main .theme-grid--4 .theme__en { font-size: 11px; }
 }
-/* 幅 320px 前後: タイルの題名が左上の番号に重ならないよう、番号と題名を少し小さく */
+/* 幅 320px 前後: タイルの題名が左上の番号に重ならないよう、番号と題名を少し小さく。区画の見出しの英字が画面の右端で切れないよう、見出しの字間を詰める */
 @media (max-width: 359px) {
   .theme a::after { left: 6px; top: 3px; font-size: 15px; }
   .theme__jp, .theme-grid--4 .theme__jp, .main .theme-grid--4 .theme__jp { font-size: 13px; letter-spacing: 0; }
+  .news__ttl { gap: 6px; }
+  .news__ttl::before { width: 28px; height: 22px; margin-right: 2px; }
+  .news__ttl small { letter-spacing: .06em; }
 }
+/* 左のメニューがある狭い PC の画面では、研究テーマのタイルを3列に（4列では小さく、番号が題名に重なる） */
+@media (min-width: 961px) and (max-width: 1023px) { .main .theme-grid--4 { grid-template-columns: repeat(3, 1fr); } }
 /* 高さの低い画面では、研究内容ページの見出し帯を低くして、左のメニューを最初の画面に入れる */
 @media (min-width: 961px) and (max-height: 760px) { .phero { min-height: 250px; } .phero--plain { min-height: 130px; } }
 
@@ -501,6 +507,7 @@ html { overflow-x: hidden; }
 .doc figure { margin: 0 0 1.4em; }
 .pics figure { margin: 0; }
 .pics img { display: block; width: 100%; margin: 0; }
+.pics img, .gal li img { box-sizing: border-box; }   /* 枠の1px を幅の中に入れて、マスからはみ出さない */
 .pics figcaption { margin-top: 6px; font-size: 13px; line-height: 1.6; color: #c9d8ef; }
 .pics .is-pair { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }   /* 2枚に説明が1つの組 */
 .pics .is-pair figcaption { grid-column: 1 / -1; margin-top: -10px; }
@@ -606,9 +613,8 @@ html { overflow-x: hidden; }
   .phero::after { background: linear-gradient(180deg, transparent 0%, transparent 28%, rgba(6,19,48,.85) 50%, rgba(6,19,48,.9) 100%); }
 }
 @media (max-width: 960px) and (max-height: 500px) { .lh__box { height: 62vh; height: 62svh; } }
-/* 横向きのスマホ: トップの写真と研究内容の見出し帯を低くして、コピーと説明文を最初の画面に入れる */
+/* 横向きのスマホ: 研究内容の見出し帯を低くして、説明文を最初の画面に入れる（トップの写真は低くしない。低くすると、コピーが集合写真の顔に重なる） */
 @media (max-width: 960px) and (max-height: 500px) {
-  .hero__slides, .hero__copy { aspect-ratio: auto; height: 56vh; }
   .phero:not(.phero--plain) { min-height: 0; }
   .phero:not(.phero--plain) .phero__text { padding-top: 48px; }
 }
@@ -657,8 +663,9 @@ html { overflow-x: hidden; }
 .phero__hud > span:not(.live) { white-space: nowrap; }
 @media (min-width: 961px) and (max-height: 800px) { .lh__box { height: 52vh; } }
 
-/* 題名と見出しの最後の行に「た。」などの1字だけを残さない（対応していないブラウザでは今までどおり）。フッターの住所は地名の途中で折らない */
-.cards__ttl, .newslist__ttl, .doc h2, .doc h3, .pics figcaption, .gal li b, .gal li span { text-wrap: pretty; }
+/* 題名・見出し・本文の最後の行に「た。」などの1字だけを残さない（対応していないブラウザでは今までどおり）。行の頭に「ー」や小さい「ョ」を置かない。フッターの住所は地名の途中で折らない */
+.cards__ttl, .newslist__ttl, .doc h2, .doc h3, .doc p, .doc td, .doc li, .pics figcaption, .gal li b, .gal li span { text-wrap: pretty; }
+body { line-break: strict; }
 .ft p { word-break: keep-all; overflow-wrap: anywhere; }
 /* お知らせの記事の写真は、縦長でも画面の高さの80%まで（同じ大きさの写真が同じ大きさで並ぶ） */
 .doc:has(> .news__title) img { max-height: 80vh; width: auto; }
