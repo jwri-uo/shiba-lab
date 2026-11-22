@@ -520,8 +520,8 @@ html { overflow-x: hidden; }
   .gal { grid-template-columns: 1fr 1fr; gap: 10px; }
   .gal li { padding: 8px; }
   .pics { grid-template-columns: 1fr; }
-  .pics .is-pair { grid-template-columns: 1fr; gap: 20px; }
-  .pics .is-pair figcaption { margin-top: -14px; }
+  .pics .is-pair { grid-template-columns: 1fr; gap: 6px; }   /* 組の2枚は、別々の図（20px）より近づけて1組に見せる */
+  .pics .is-pair figcaption { margin-top: 0; }
 }
 
 /* ===== お知らせの記事と一覧 ===== */
