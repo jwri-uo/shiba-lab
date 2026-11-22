@@ -660,3 +660,5 @@ html { overflow-x: hidden; }
 /* 題名と見出しの最後の行に「た。」などの1字だけを残さない（対応していないブラウザでは今までどおり）。フッターの住所は地名の途中で折らない */
 .cards__ttl, .newslist__ttl, .doc h2, .doc h3, .pics figcaption, .gal li b, .gal li span { text-wrap: pretty; }
 .ft p { word-break: keep-all; overflow-wrap: anywhere; }
+/* お知らせの記事の写真は、縦長でも画面の高さの80%まで（同じ大きさの写真が同じ大きさで並ぶ） */
+.doc:has(> .news__title) img { max-height: 80vh; width: auto; }
