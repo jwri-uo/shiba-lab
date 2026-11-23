@@ -33,21 +33,17 @@
       motionChanged();
     });
     hd.appendChild(mb);
-    // 置き場所は、英語の所属名（… The University of Osaka）の行の真下（右上の溶接の画像と火花を隠さない）。PC は行の右端に、
-    // スマホは行の左端にそろえる。PC で行が折り返して短いときは、名前の欄の右端にそろえる。字の読み込みや幅の変化で行の長さが変わるので、そのたびに測り直す
+    // 置き場所は、英語の所属名（… The University of Osaka）の行の真下、行の左端にそろえる（右上の溶接の画像と火花を隠さない）。
+    // 字の読み込みや幅の変化で行の位置が変わるので、そのたびに測り直す
     var labEn = document.querySelector('.hd__lab small'), lab = document.querySelector('.hd__lab');
     var placeMb = function () {
-      if (!labEn || !lab) return;
+      if (!labEn) return;
       var rg = document.createRange(); rg.selectNodeContents(labEn);
       var rs = rg.getClientRects(), line = rs[rs.length - 1];
       if (!line) return;
-      var h = hd.getBoundingClientRect(), l = lab.getBoundingClientRect(), end = line.right;
-      if (window.matchMedia && window.matchMedia('(max-width: 960px)').matches) {
-        mb.style.right = 'auto'; mb.style.left = Math.round(l.left - h.left) + 'px';
-      } else {
-        if (end - mb.offsetWidth < l.left) end = l.right;
-        mb.style.left = 'auto'; mb.style.right = Math.round(h.right - end) + 'px';
-      }
+      var h = hd.getBoundingClientRect();
+      mb.style.right = 'auto';
+      mb.style.left = Math.round(line.left - h.left) + 'px';
       mb.style.top = Math.round(line.bottom - h.top + 2) + 'px';
     };
     placeMb();
@@ -94,7 +90,7 @@
   var heroBox = document.querySelector('.hero__slides');
   var heroSlides = heroBox ? heroBox.querySelectorAll('.hero__slide') : [];
   if (heroSlides.length > 1) (function () {
-    var n = heroSlides.length, cur = 0, want = 0, timer = 0, hold = false, i;
+    var n = heroSlides.length, cur = 0, want = 0, timer = 0, i;
     var wasReduced = reduced(), stopped = wasReduced;
     try { if (localStorage.getItem('shiba-slides') === 'off') stopped = true; } catch (e) { /* 覚えられない環境では、開くたびに動く */ }
     for (i = 0; i < n; i++) if (heroSlides[i].classList.contains('is-on')) cur = want = i;
@@ -128,7 +124,7 @@
     };
     var schedule = function () {
       clearTimeout(timer); timer = 0;
-      if (!hold && !stopped && !document.hidden) timer = setTimeout(function () { go(cur + 1); }, 6000);
+      if (!stopped && !document.hidden) timer = setTimeout(function () { go(cur + 1); }, 6000);
     };
     var go = function (k) {   // 写真が届いてから替える（届く前に替えると、一瞬なにも写らない）
       k = (k % n + n) % n; want = k;
@@ -138,12 +134,13 @@
       else { im.addEventListener('load', swap, { once: true }); im.addEventListener('error', swap, { once: true }); }
     };
     Array.prototype.forEach.call(dots, function (d, k) { d.addEventListener('click', function () { go(k); }); });
-    play.addEventListener('click', function () {
+    play.addEventListener('click', function () {   // ⏸ ですぐ止め、▶ ですぐ次の写真へ進めて、そこから6秒ごとに替える
       stopped = !stopped;
       try { if (stopped) localStorage.setItem('shiba-slides', 'off'); else localStorage.removeItem('shiba-slides'); } catch (e) { /* 覚えられなくても、このページでは止まる */ }
       playLabel();
-      if (!stopped) for (var j = 0; j < n; j++) img(j);
-      schedule();
+      if (stopped) { schedule(); return; }
+      for (var j = 0; j < n; j++) img(j);
+      go(cur + 1);
     });
     nav.addEventListener('keydown', function (e) {   // 印を選んでいるときは ← → で前後へ
       var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
@@ -152,12 +149,6 @@
       var k = ((want + d) % n + n) % n;
       go(k); dots[k].focus();
     });
-    // 印にカーソルを当てている間と、キーボードで印を選んでいる間は、自動では替えない
-    var pause = function (on) { hold = on; schedule(); };
-    nav.addEventListener('mouseenter', function () { pause(true); });
-    nav.addEventListener('mouseleave', function () { pause(false); });
-    nav.addEventListener('focusin', function () { pause(true); });
-    nav.addEventListener('focusout', function (e) { if (!nav.contains(e.relatedTarget)) pause(false); });
     // スマホ: 写真を横に払うと前後へ（メニューと印の上は除く）
     var hero = heroBox.parentNode, sx = 0, sy = 0;
     hero.addEventListener('touchstart', function (e) { sx = e.changedTouches[0].clientX; sy = e.changedTouches[0].clientY; }, { passive: true });
