@@ -1,9 +1,10 @@
 /* 全ページ共通の動き。
+   0) トップの写真を5秒ごとに替え、何枚目かを示す。印を押すと（スマホは横に払っても）その写真に替わる
    1) タイルやカードを、画面に入ったときに順に表示する
    2) ヘッダー右上の溶接の画像から火花を飛ばす
    3) スクロールに合わせて、画面の上端を溶接線が走る
    4) カードをカーソルの側へ少し傾ける
-   動きを減らす設定の端末では何もしない。JavaScript が動かなくてもページは普通に読める。 */
+   動きを減らす設定の端末では、写真を手で替えることだけができる。JavaScript が動かなくてもページは普通に読める。 */
 (function () {
   'use strict';
   // 動きを止めるかどうかは1か所で決める: 端末の「動きを減らす」設定か、ヘッダーの「動きを止める」ボタン（全ページで覚える）。
@@ -65,18 +66,80 @@
     window.addEventListener('resize', function () { cancelAnimationFrame(wideFrame); wideFrame = requestAnimationFrame(markWide); });
     document.addEventListener('toggle', markWide, true);   // たたんだ表を開いたとき
   }
-  if (reduceMq && reduceMq.matches) return;
-
-  /* ---- 0) トップの写真の2枚目以降は、ページを読み終えてから読む（1枚目を早く出すため）。届いたら切り替えを始める ---- */
-  var lateSlides = document.querySelectorAll('.hero__slides img[data-src]');
-  if (lateSlides.length) {
-    var startSlides = function () {
-      var left = lateSlides.length;
-      var one = function () { if (--left === 0) document.querySelector('.hero__slides').classList.add('is-ready'); };
-      Array.prototype.forEach.call(lateSlides, function (im) { im.onload = im.onerror = one; im.src = im.getAttribute('data-src'); });
+  /* ---- 0) トップの写真: 5秒ごとに次へ。2枚目以降はページを読み終えてから読む（1枚目を早く出すため）。
+     動きを止めているときは自動では替えず、押した写真だけをその場で読む ---- */
+  var heroBox = document.querySelector('.hero__slides');
+  var heroSlides = heroBox ? heroBox.querySelectorAll('.hero__slide') : [];
+  if (heroSlides.length > 1) (function () {
+    var n = heroSlides.length, cur = 0, want = 0, timer = 0, hold = false, i;
+    for (i = 0; i < n; i++) if (heroSlides[i].classList.contains('is-on')) cur = want = i;
+    var two = function (k) { return (k < 10 ? '0' : '') + k; };
+    var nav = document.createElement('div');
+    nav.className = 'hero__nav';
+    nav.setAttribute('role', 'group');
+    nav.setAttribute('aria-label', 'トップの写真の切り替え');
+    var h = '<span class="hero__count" aria-hidden="true"><b></b> / ' + two(n) + '</span><span class="hero__dots">';
+    for (i = 0; i < n; i++) h += '<button type="button" class="hero__dot" aria-label="' + (i + 1) + '枚目の写真"></button>';
+    nav.innerHTML = h + '</span>';
+    heroBox.parentNode.insertBefore(nav, heroBox.parentNode.querySelector('.hero__menu'));
+    var dots = nav.querySelectorAll('.hero__dot'), num = nav.querySelector('.hero__count b');
+    var img = function (k) {   // k 枚目の写真を、まだ読んでいなければ読み始める
+      var im = heroSlides[k].querySelector('img');
+      if (im && im.hasAttribute('data-src') && !im.getAttribute('src')) im.src = im.getAttribute('data-src');
+      return im;
     };
-    if (document.readyState === 'complete') startSlides(); else window.addEventListener('load', startSlides);
-  }
+    var mark = function () {
+      for (var j = 0; j < n; j++) {
+        heroSlides[j].classList.toggle('is-on', j === cur);
+        if (j === cur) { heroSlides[j].removeAttribute('aria-hidden'); dots[j].setAttribute('aria-current', 'true'); }
+        else { heroSlides[j].setAttribute('aria-hidden', 'true'); dots[j].removeAttribute('aria-current'); }
+      }
+      num.textContent = two(cur + 1);
+    };
+    var schedule = function () {
+      clearTimeout(timer); timer = 0;
+      if (!hold && !document.hidden && !motion.calm()) timer = setTimeout(function () { go(cur + 1); }, 5000);
+    };
+    var go = function (k) {   // 写真が届いてから替える（届く前に替えると、一瞬なにも写らない）
+      k = (k % n + n) % n; want = k;
+      var im = img(k);
+      var swap = function () { if (want !== k) return; cur = k; mark(); img((k + 1) % n); schedule(); };
+      if (!im || (im.complete && im.getAttribute('src'))) swap();
+      else { im.addEventListener('load', swap, { once: true }); im.addEventListener('error', swap, { once: true }); }
+    };
+    Array.prototype.forEach.call(dots, function (d, k) { d.addEventListener('click', function () { go(k); }); });
+    nav.addEventListener('keydown', function (e) {   // 印を選んでいるときは ← → で前後へ
+      var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      var k = ((want + d) % n + n) % n;
+      go(k); dots[k].focus();
+    });
+    // 印にカーソルを当てている間と、キーボードで印を選んでいる間は、自動では替えない
+    var pause = function (on) { hold = on; schedule(); };
+    nav.addEventListener('mouseenter', function () { pause(true); });
+    nav.addEventListener('mouseleave', function () { pause(false); });
+    nav.addEventListener('focusin', function () { pause(true); });
+    nav.addEventListener('focusout', function (e) { if (!nav.contains(e.relatedTarget)) pause(false); });
+    // スマホ: 写真を横に払うと前後へ（メニューと印の上は除く）
+    var hero = heroBox.parentNode, sx = 0, sy = 0;
+    hero.addEventListener('touchstart', function (e) { sx = e.changedTouches[0].clientX; sy = e.changedTouches[0].clientY; }, { passive: true });
+    hero.addEventListener('touchend', function (e) {
+      if (e.target.closest && e.target.closest('.hero__menu, .hero__nav')) return;
+      var dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) go(want + (dx < 0 ? 1 : -1));
+    }, { passive: true });
+    document.addEventListener('visibilitychange', schedule);
+    document.addEventListener('shiba:motion', schedule);
+    mark();
+    var start = function () {
+      if (!motion.calm()) for (var j = 0; j < n; j++) img(j);   // 自動で替えるときは、全部を先に読んでおく
+      schedule();
+    };
+    if (document.readyState === 'complete') start(); else window.addEventListener('load', start);
+  })();
+
+  if (reduceMq && reduceMq.matches) return;
 
   /* ---- 1) 画面に入ったら順に表示 ---- */
   var targets = document.querySelectorAll('.tiles li, .cards li, .theme, .news__head');
