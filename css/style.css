@@ -77,10 +77,11 @@ img { max-width: 100%; height: auto; vertical-align: middle; }
     radial-gradient(ellipse 70% 80% at 0% 100%, rgba(6,19,48,.85), rgba(6,19,48,.5) 45%, transparent 75%),
     linear-gradient(180deg, rgba(6,19,48,.12) 0%, rgba(20,60,140,.04) 35%, rgba(6,19,48,.18) 58%, rgba(6,19,48,.93) 100%),
     linear-gradient(90deg, rgba(6,19,48,.55) 0%, transparent 14%, transparent 62%, rgba(6,19,48,.45) 100%); }
-/* 何枚かの写真をつないだ画像（is-collage）は、メニューの左に見える範囲（横:縦 = 2:1）に合わせて組み直してある（作り方は Top画像の 組み直し.py）。
+/* 何枚かの写真をつないだ画像（is-collage）は、メニューの左に見える範囲（横:縦 = 1.92:1）に合わせて組み直してある（作り方は Top画像の 組み直し.py）。
    PC ではメニューの左の範囲いっぱいに出し、右のメニューに写真が隠れないようにする。スマホは帯いっぱい（見せる所は --sp）。暗くするのはコピーの後ろだけ */
+.hero__slide.is-collage { background-color: #071636; background-position: center; background-size: cover; background-repeat: no-repeat; }   /* 帯いっぱいに、その画像をぼかした背景（index.html の background-image）を敷き、メニューの後ろにも絵が見えるようにする */
 .hero__slide.is-collage img { display: block; object-position: var(--sp, 50% 50%); }
-@media (min-width: 961px) { .hero__slide.is-collage img { width: calc(100% - 300px); object-position: 50% 50%; } }
+@media (min-width: 961px) { .hero__slide.is-collage img { width: calc(100% - 338px); object-position: 50% 50%; box-shadow: 6px 0 0 #061330; } }   /* 右端はメニューの斜めの縁の下の角にそろえる（幅1280以上で 902×470 = 画像と同じ 1.92:1）。右の縁にも、写真の間と同じ太さのすき間 */
 .hero__slide.is-collage::after { background: radial-gradient(ellipse 66% 80% at 0% 100%, rgba(6,19,48,.9), rgba(6,19,48,.55) 45%, transparent 78%); }
 @media (max-width: 960px) { .hero__slide.is-collage::after { background: linear-gradient(180deg, transparent 32%, rgba(6,19,48,.62) 52%, rgba(6,19,48,.92) 78%); } }   /* スマホはコピーが帯の幅いっぱいに重なるので、下半分を暗く */
 /* 左端の斜めの暗い帯と光る縁（つないだ画像のときは、画像の角を隠さないよう消す） */
@@ -89,7 +90,7 @@ img { max-width: 100%; height: auto; vertical-align: middle; }
 .hero__slides, .hero__copy { touch-action: pan-y pinch-zoom; }   /* 写真の上で横に払ったら、ブラウザの「戻る」ではなく写真の切り替えにする（縦のスクロールと拡大はそのまま） */
 @media (prefers-reduced-motion: reduce) { .hero__slide, .hero__edge { transition: none; } }
 /* 写真の切り替え（fx.js が置く）: 自動の切り替えを止めるボタン、何枚目かの数字、押すとその写真に替わる印 */
-.hero__nav { position: absolute; z-index: 3; right: 18px; bottom: 26px; display: flex; align-items: center; gap: 10px; }
+.hero__nav { position: absolute; z-index: 3; right: 0; bottom: 26px; display: flex; align-items: center; gap: 6px; }   /* PC は右端に寄せ、メニューの左に収めた画像（右端 = 幅 - 338px）にかからないようにする */
 .hero__count { font-family: var(--en); font-weight: 600; font-size: 12.5px; letter-spacing: .08em; color: #c9d8ef; font-variant-numeric: tabular-nums; text-shadow: 0 1px 4px #061330; white-space: nowrap; }
 .hero__count b { font-size: 16px; color: #fff; }
 .hero__dots { display: flex; }
