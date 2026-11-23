@@ -35,7 +35,7 @@ img { max-width: 100%; height: auto; vertical-align: middle; }
 @media (min-width: 961px) { .beams .beam:not(:first-child) { translate: 0 min(0px, calc((100vw - 1280px) * .147)); } }   /* 幅が狭くタイルが低い画面では、タイルが低くなった分だけ筋を上へ（お知らせの見出しにかけない） */
 
 /* ヘッダー */
-.hd { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 18px 0 16px; z-index: 2; }
+.hd { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 18px 0 25px; z-index: 2; }   /* 下の余白は、英語の所属名の下に置く「動きを止める」ボタンの分 */
 .hd__torch { position: absolute; right: 70px; top: -88px; width: 360px; pointer-events: none; z-index: -1; }
 .hd__name { display: flex; align-items: center; gap: 20px; text-decoration: none; }
 .hd__logo { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 1px dashed rgba(243,247,253,.5); border-radius: 50%; font-size: 10px; color: var(--sub); }
@@ -66,7 +66,7 @@ img { max-width: 100%; height: auto; vertical-align: middle; }
 .hero__slide .is-wide { object-fit: contain; object-position: 0 100%; transform: scale(1.24); transform-origin: 30% 100%; filter: brightness(1.12) saturate(.95); }
 .hero__slides { position: absolute; inset: 0; overflow: hidden; background: radial-gradient(ellipse 70% 60% at 40% 20%, #18407e, #071636 70%); }
 .hero__slide { position: absolute; inset: 0; margin: 0; opacity: 0; transition: opacity .6s ease; }
-.hero__slide.is-on { opacity: 1; }   /* 見せている写真。5秒ごとに fx.js が次へ替える（JavaScript が動かないときは1枚目のまま） */
+.hero__slide.is-on { opacity: 1; }   /* 見せている写真。6秒ごとに fx.js が次へ替える（JavaScript が動かないときは1枚目のまま） */
 .hero__slide img { width: 100%; height: 100%; object-fit: cover; object-position: var(--pos, 50% 50%); filter: saturate(.95) brightness(1.04); }   /* 写真ごとの見せる位置は、index.html の --pos（スマホは --sp） */
 /* 写真の上の暗さ（下はコピーの後ろ、左右は縁）。写真ごとに持たせて、写真と一緒に入れ替える */
 .hero__slide::after { content: ""; position: absolute; inset: 0;
@@ -356,7 +356,7 @@ html { overflow-x: hidden; }
 /* 写真の上のメニュー（タイルに無い8ページ）を高さいっぱいに均等に並べる。
    画面が低いときは写真を低くして、下のタイルまで最初の画面に入れる */
 @media (min-width: 961px) {
-  .hero { min-height: min(clamp(340px, calc(100vh - 330px), 500px), calc((100vw - 40px) / 2.25)); }   /* 幅の狭い画面では、横長の集合写真（.is-wide）が枠を覆える高さまでにする（上に暗い隙間を出さない） */
+  .hero { min-height: min(clamp(340px, calc(100vh - 340px), 500px), calc((100vw - 40px) / 2.25)); }   /* 幅の狭い画面では、横長の集合写真（.is-wide）が枠を覆える高さまでにする（上に暗い隙間を出さない） */
   .hero__menu ul { display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
   .hero__menu li { flex: 1; display: flex; }
   .hero__menu a { flex: 1; font-size: 14px; }
@@ -404,11 +404,11 @@ html { overflow-x: hidden; }
 
 /* 高さの低い画面（小さめのノートパソコン）では上を詰めて、タイルの題名まで最初の画面に入れる */
 @media (min-width: 961px) and (max-height: 760px) {
-  .hd { padding: 10px 0; }
+  .hd { padding: 10px 0 24px; }
   .hero { min-height: 300px; }
   .hero__lead { font-size: 34px; margin-bottom: 12px; }
   .hero__copy { padding-bottom: 30px; }
-  .hero__menu { margin-bottom: 34px; }
+  .hero__menu { margin-bottom: 58px; }   /* 下に、写真の切り替えの印（.hero__nav）を置く分をあける */
   .hero__menu a { padding-top: 2px; padding-bottom: 2px; font-size: 13px; }
 }
 /* トップの写真とコピーの重なり: 幅 961〜1100px は写真が低くなるので、コピーを小さくして下げ、横長の集合写真（.is-wide）を少し上へずらす */
@@ -661,10 +661,9 @@ html { overflow-x: hidden; }
 .doc__toc a span { margin-left: .5em; color: var(--sub); font-family: var(--en); }   /* 研究動画の目次の長さ */
 
 /* 「動きを止める」ボタン（fx.js がヘッダーに置く）と、止めているとき（html.is-still）の見た目 */
-.motion-btn { position: absolute; z-index: 3; right: 0; top: 10px; -webkit-appearance: none; appearance: none; padding: 3px 10px; border: 1px solid rgba(109,182,255,.6); border-radius: 0; background: rgba(5,16,40,.75); color: var(--white); font: inherit; font-size: 12px; line-height: 1.6; cursor: pointer; }
+.motion-btn { position: absolute; z-index: 3; right: 0; top: 10px; -webkit-appearance: none; appearance: none; padding: 2px 10px; border: 1px solid rgba(109,182,255,.6); border-radius: 0; background: rgba(5,16,40,.75); color: var(--white); font: inherit; font-size: 11.5px; line-height: 1.4; cursor: pointer; }
 .motion-btn:hover { border-color: var(--memorial-hi); color: var(--memorial-hi); }
 .is-still .weldbar i, .is-still .gn::before, .is-still .gn::after { animation: none; }
-.is-still .hero__slide, .is-still .hero__edge { transition: none; }
 .is-still .gn::after { opacity: 0; }
 .is-still .tiles img, .is-still .theme img, .is-still .tiles a::before, .is-still .theme a::before, .is-still .cards a::before { transition: none; }
 .is-still .tiles a:hover img, .is-still .theme a:hover img { transform: none; }

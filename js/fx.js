@@ -1,5 +1,5 @@
 /* 全ページ共通の動き。
-   0) トップの写真を5秒ごとに替え、何枚目かを示す。印を押すと（スマホは横に払っても）その写真に替わる
+   0) トップの写真を6秒ごとに替え、何枚目かを示す。印を押すと（スマホは横に払っても）その写真に替わる
    1) タイルやカードを、画面に入ったときに順に表示する
    2) ヘッダー右上の溶接の画像から火花を飛ばす
    3) スクロールに合わせて、画面の上端を溶接線が走る
@@ -33,6 +33,23 @@
       motionChanged();
     });
     hd.appendChild(mb);
+    // 置き場所は、英語の所属名（… The University of Osaka）の行の真下、右端にそろえる（右上の溶接の画像と火花を隠さない）。
+    // 狭い画面で行が折り返して短いときは、名前の欄の右端にそろえる。字の読み込みや幅の変化で行の長さが変わるので、そのたびに測り直す
+    var labEn = document.querySelector('.hd__lab small'), lab = document.querySelector('.hd__lab');
+    var placeMb = function () {
+      if (!labEn || !lab) return;
+      var rg = document.createRange(); rg.selectNodeContents(labEn);
+      var rs = rg.getClientRects(), line = rs[rs.length - 1];
+      if (!line) return;
+      var h = hd.getBoundingClientRect(), l = lab.getBoundingClientRect(), end = line.right;
+      if (end - mb.offsetWidth < l.left) end = l.right;
+      mb.style.right = Math.round(h.right - end) + 'px';
+      mb.style.top = Math.round(line.bottom - h.top + 2) + 'px';
+    };
+    placeMb();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(placeMb);
+    if ('ResizeObserver' in window && lab) new ResizeObserver(placeMb).observe(lab);
+    else window.addEventListener('resize', placeMb);
   }
   // 幅の狭い画面では、左のメニューは分類の名前だけにして、本文をすぐ読めるようにする（押せば開く）
   if (window.matchMedia && window.matchMedia('(max-width: 960px)').matches) {
@@ -66,8 +83,9 @@
     window.addEventListener('resize', function () { cancelAnimationFrame(wideFrame); wideFrame = requestAnimationFrame(markWide); });
     document.addEventListener('toggle', markWide, true);   // たたんだ表を開いたとき
   }
-  /* ---- 0) トップの写真: 5秒ごとに次へ。2枚目以降はページを読み終えてから読む（1枚目を早く出すため）。
-     動きを止めているときは自動では替えず、押した写真だけをその場で読む ---- */
+  /* ---- 0) トップの写真: 6秒ごとに次へ。2枚目以降はページを読み終えてから読む（1枚目を早く出すため）。
+     ヘッダーの「動きを止める」ボタンでは止めない（先生の希望）。端末が「動きを減らす」設定のときだけ自動では替えず、押した写真だけをその場で読む ---- */
+  var reduced = function () { return !!(reduceMq && reduceMq.matches); };
   var heroBox = document.querySelector('.hero__slides');
   var heroSlides = heroBox ? heroBox.querySelectorAll('.hero__slide') : [];
   if (heroSlides.length > 1) (function () {
@@ -98,7 +116,7 @@
     };
     var schedule = function () {
       clearTimeout(timer); timer = 0;
-      if (!hold && !document.hidden && !motion.calm()) timer = setTimeout(function () { go(cur + 1); }, 5000);
+      if (!hold && !document.hidden && !reduced()) timer = setTimeout(function () { go(cur + 1); }, 6000);
     };
     var go = function (k) {   // 写真が届いてから替える（届く前に替えると、一瞬なにも写らない）
       k = (k % n + n) % n; want = k;
@@ -133,7 +151,7 @@
     document.addEventListener('shiba:motion', schedule);
     mark();
     var start = function () {
-      if (!motion.calm()) for (var j = 0; j < n; j++) img(j);   // 自動で替えるときは、全部を先に読んでおく
+      if (!reduced()) for (var j = 0; j < n; j++) img(j);   // 自動で替えるときは、全部を先に読んでおく
       schedule();
     };
     if (document.readyState === 'complete') start(); else window.addEventListener('load', start);
