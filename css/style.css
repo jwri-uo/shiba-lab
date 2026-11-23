@@ -77,10 +77,12 @@ img { max-width: 100%; height: auto; vertical-align: middle; }
     radial-gradient(ellipse 70% 80% at 0% 100%, rgba(6,19,48,.85), rgba(6,19,48,.5) 45%, transparent 75%),
     linear-gradient(180deg, rgba(6,19,48,.12) 0%, rgba(20,60,140,.04) 35%, rgba(6,19,48,.18) 58%, rgba(6,19,48,.93) 100%),
     linear-gradient(90deg, rgba(6,19,48,.55) 0%, transparent 14%, transparent 62%, rgba(6,19,48,.45) 100%); }
-/* 何枚かの写真をつないだ横長の画像は、右のメニューに隠れないよう、メニューの左に全体を収める（上に寄せ、空いた所は地の色）。暗くするのはコピーの後ろだけ */
-.hero__slide.is-collage img { display: block; width: 100%; height: auto; max-height: 100%; object-fit: contain; object-position: 0 0; }
-@media (min-width: 961px) { .hero__slide.is-collage img { width: calc(100% - 360px); } }
-.hero__slide.is-collage::after { background: radial-gradient(ellipse 60% 75% at 0% 100%, rgba(6,19,48,.85), rgba(6,19,48,.45) 45%, transparent 75%); }
+/* 何枚かの写真をつないだ画像（is-collage）は、メニューの左に見える範囲（横:縦 = 2:1）に合わせて組み直してある（作り方は Top画像の 組み直し.py）。
+   PC ではメニューの左の範囲いっぱいに出し、右のメニューに写真が隠れないようにする。スマホは帯いっぱい（見せる所は --sp）。暗くするのはコピーの後ろだけ */
+.hero__slide.is-collage img { display: block; object-position: var(--sp, 50% 50%); }
+@media (min-width: 961px) { .hero__slide.is-collage img { width: calc(100% - 300px); object-position: 50% 50%; } }
+.hero__slide.is-collage::after { background: radial-gradient(ellipse 66% 80% at 0% 100%, rgba(6,19,48,.9), rgba(6,19,48,.55) 45%, transparent 78%); }
+@media (max-width: 960px) { .hero__slide.is-collage::after { background: linear-gradient(180deg, transparent 32%, rgba(6,19,48,.62) 52%, rgba(6,19,48,.92) 78%); } }   /* スマホはコピーが帯の幅いっぱいに重なるので、下半分を暗く */
 /* 左端の斜めの暗い帯と光る縁（つないだ画像のときは、画像の角を隠さないよう消す） */
 .hero__edge { position: absolute; z-index: 1; left: 0; top: 0; bottom: 0; width: 70px; background: linear-gradient(90deg, rgba(6,19,48,.95), rgba(6,19,48,.6)); clip-path: polygon(0 0, 100% 0, 0 55%); transition: opacity .6s ease; }
 .hero:has(.is-collage.is-on) .hero__edge { opacity: 0; }
