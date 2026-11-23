@@ -66,13 +66,20 @@ img { max-width: 100%; height: auto; vertical-align: middle; }
 .hero__slide .is-wide { object-fit: contain; object-position: 0 100%; transform: scale(1.24); transform-origin: 30% 100%; filter: brightness(1.12) saturate(.95); }
 .hero__slides { position: absolute; inset: 0; overflow: hidden; background: radial-gradient(ellipse 70% 60% at 40% 20%, #18407e, #071636 70%); }
 .hero__slide { position: absolute; inset: 0; margin: 0; opacity: 0; }
-.hero__slides.is-ready .hero__slide { animation: hero-fade 20s infinite; }   /* 2枚目以降の写真が届いてから切り替え始める（fx.js） */
-.hero__slide img { width: 100%; height: 100%; object-fit: cover; object-position: 42% 40%; filter: saturate(.95) brightness(1.04); }
+.hero__slides.is-ready .hero__slide { animation: hero-fade 50s infinite; }   /* 2枚目以降の写真が届いてから切り替え始める（fx.js）。10枚を5秒ずつ */
+.hero__slide img { width: 100%; height: 100%; object-fit: cover; object-position: var(--pos, 50% 50%); filter: saturate(.95) brightness(1.04); }   /* 写真ごとの見せる位置は、index.html の --pos（スマホは --sp） */
+.hero__slide.is-light::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 70% 80% at 0% 100%, rgba(6,19,48,.85), rgba(6,19,48,.5) 45%, transparent 75%); }   /* 白地の図は、コピーの後ろだけ暗くして字を読めるように */
 .hero__slide:nth-child(1) { animation-delay: -0.5s; opacity: 1; }
 .hero__slide:nth-child(2) { animation-delay: 4.5s; }
 .hero__slide:nth-child(3) { animation-delay: 9.5s; }
 .hero__slide:nth-child(4) { animation-delay: 14.5s; }
-@keyframes hero-fade { 0% { opacity: 0; } 2.5% { opacity: 1; } 25% { opacity: 1; } 27.5% { opacity: 0; } 100% { opacity: 0; } }
+.hero__slide:nth-child(5) { animation-delay: 19.5s; }
+.hero__slide:nth-child(6) { animation-delay: 24.5s; }
+.hero__slide:nth-child(7) { animation-delay: 29.5s; }
+.hero__slide:nth-child(8) { animation-delay: 34.5s; }
+.hero__slide:nth-child(9) { animation-delay: 39.5s; }
+.hero__slide:nth-child(10) { animation-delay: 44.5s; }
+@keyframes hero-fade { 0% { opacity: 0; } 1% { opacity: 1; } 10% { opacity: 1; } 11% { opacity: 0; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .hero__slide, .hero__slides.is-ready .hero__slide { animation: none; } }
 .hero__slides::after { content: ""; position: absolute; inset: 0;
   background:
@@ -151,6 +158,7 @@ img { max-width: 100%; height: auto; vertical-align: middle; }
   .gn .is-current a { padding: 0 22px; }
   .hero { display: block; min-height: 0; }
   .hero__slides { position: relative; aspect-ratio: 4 / 3; }
+  .hero__slide img { object-position: var(--sp, var(--pos, 50% 50%)); }
   .hero__slide .is-wide { object-fit: cover; object-position: 38% 50%; transform: none; }
   .hero__edge { display: none; }
   .hero__copy { position: absolute; left: 0; right: 0; top: 0; aspect-ratio: 4 / 3; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 14px 16px; box-sizing: border-box; }
@@ -336,7 +344,7 @@ html { overflow-x: hidden; }
 /* 写真の上のメニュー（タイルに無い8ページ）を高さいっぱいに均等に並べる。
    画面が低いときは写真を低くして、下のタイルまで最初の画面に入れる */
 @media (min-width: 961px) {
-  .hero { min-height: min(clamp(340px, calc(100vh - 330px), 500px), calc((100vw - 40px) / 2.25)); }   /* 幅の狭い画面では、横長の1枚目の写真が枠を覆える高さまでにする（上に暗い隙間を出さない） */
+  .hero { min-height: min(clamp(340px, calc(100vh - 330px), 500px), calc((100vw - 40px) / 2.25)); }   /* 幅の狭い画面では、横長の集合写真（.is-wide）が枠を覆える高さまでにする（上に暗い隙間を出さない） */
   .hero__menu ul { display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
   .hero__menu li { flex: 1; display: flex; }
   .hero__menu a { flex: 1; font-size: 14px; }
@@ -391,8 +399,7 @@ html { overflow-x: hidden; }
   .hero__menu { margin-bottom: 34px; }
   .hero__menu a { padding-top: 2px; padding-bottom: 2px; font-size: 13px; }
 }
-/* トップの写真とコピーの重なり: 4枚目は下寄りを見せて顔をコピーより上に。幅 961〜1100px は写真が低くなるので、コピーを小さくして下げ、1枚目を少し上へずらす */
-@media (min-width: 961px) { .hero__slide:nth-child(4) img { object-position: 42% 62%; } }
+/* トップの写真とコピーの重なり: 幅 961〜1100px は写真が低くなるので、コピーを小さくして下げ、横長の集合写真（.is-wide）を少し上へずらす */
 @media (min-width: 961px) and (max-width: 1100px) {
   .hero__lead { font-size: 34px; margin-bottom: 12px; }
   .hero__copy { padding-bottom: 30px; }
