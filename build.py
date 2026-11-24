@@ -342,6 +342,41 @@ def read_top():
     return top_html(items)
 
 
+def media_size(path):
+    """写真（JPEG・PNG・GIF）か動画（MP4）の縦横の画素。読めなければ None"""
+    try:
+        with open(path, 'rb') as f:
+            b = f.read(4 << 20)
+    except OSError:
+        return None
+    if b[:8] == b'\x89PNG\r\n\x1a\n':
+        return int.from_bytes(b[16:20], 'big'), int.from_bytes(b[20:24], 'big')
+    if b[:6] in (b'GIF87a', b'GIF89a'):
+        return int.from_bytes(b[6:8], 'little'), int.from_bytes(b[8:10], 'little')
+    if b[:2] == b'\xff\xd8':   # JPEG: SOF の印を探す
+        i = 2
+        while i + 9 < len(b):
+            if b[i] != 0xFF:
+                i += 1
+                continue
+            m = b[i + 1]
+            if m in (0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF):
+                return int.from_bytes(b[i + 7:i + 9], 'big'), int.from_bytes(b[i + 5:i + 7], 'big')
+            if m in (0xD8, 0x01) or 0xD0 <= m <= 0xD7:
+                i += 2
+                continue
+            i += 2 + int.from_bytes(b[i + 2:i + 4], 'big')
+        return None
+    j = b.find(b'tkhd')   # MP4: 映像のトラックの tkhd の最後の8バイトが、幅と高さ（16.16 の固定小数点）
+    while j > 0:
+        size = int.from_bytes(b[j - 4:j], 'big')
+        w, h = int.from_bytes(b[j - 4 + size - 8:j - 4 + size - 4], 'big') >> 16, int.from_bytes(b[j - 4 + size - 4:j - 4 + size], 'big') >> 16
+        if w and h:
+            return w, h
+        j = b.find(b'tkhd', j + 4)
+    return None
+
+
 def top_html(items):
     """トップの写真の帯の中身。1つ目はすぐ読む（ほかは fx.js がページを読み終えてから読む）"""
     out = []
@@ -349,7 +384,11 @@ def top_html(items):
         cls = 'hero__slide' + (' is-on' if i == 0 else '') + (' is-collage' if opt['bg'] else '') + (' is-whole' if opt['whole'] else '')
         fig = f'<figure class="{cls}"'
         if opt['bg']:
-            fig += f' style="background-image: url({opt["bg"]})"'
+            # PC では、ぼかした背景（背景を作る.py の決まり事で作ったもの）を写真にぴったり重ねる。そのための写真の縦横比と見せる位置
+            size = media_size(path)
+            px, py = (int(v) / 100 for v in re.findall(r'\d+', opt['pos'])) if opt['pos'] else (.5, .5)
+            fit = f'; --ar: {size[0] / size[1]:.4f}; --bx: {px:g}; --by: {py:g}' if size else ''
+            fig += f' style="background-image: url({opt["bg"]}){fit}"'
         if opt['sec']:
             fig += f' data-sec="{opt["sec"]}"'
         style = '; '.join(x for x in (f'--pos: {opt["pos"]}' if opt['pos'] else '', f'--sp: {opt["sp"]}' if opt['sp'] else '') if x)

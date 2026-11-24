@@ -82,12 +82,23 @@ img { max-width: 100%; height: auto; vertical-align: middle; }
 .hero__slide.is-collage :is(img, video) { display: block; object-position: var(--sp, 50% 50%); }
 @media (min-width: 961px) {   /* 写真の右端はメニューの左上の角より 12px 左（右端の近くの顔も、メニューにかからない） */
   .hero__slides { container-type: inline-size; }   /* 100cqw = 帯の幅 */
+  /* 背景（Top画像の 背景を作る.py で作る）は、写真と同じ絵を少しぼかしたものに、縁の色をのばして離れるほどぼかし暗くしたもの。
+     背景の縦横は写真の 1.5 倍で、写真は左の端・上から 1/6 の所にある。これを写真とぴったり同じ大きさ・位置に重ねる（--ar = 写真の横/縦、--bx・--by = 見せる位置。index.html に build.py が書く）。
+     写真の端が消えていく所では、同じ絵のぼけに変わるだけなので、つなぎ目が見えない */
+  .hero__slide.is-collage { --bw: calc(100cqw - 290px); --bh: calc(100cqw * .375);   /* 写真の箱の幅と、帯の高さ（8:3） */
+    --dw: max(var(--bw), calc(var(--bh) * var(--ar))); --dh: calc(var(--dw) / var(--ar));   /* 写真が実際に描かれる大きさ（object-fit: cover と同じ） */
+    background-size: calc(var(--dw) * 1.5) calc(var(--dh) * 1.5);
+    background-position: calc((var(--bw) - var(--dw)) * var(--bx)) calc((var(--bh) - var(--dh)) * var(--by) - var(--dh) / 4); }
+  .hero__slide.is-whole { --dw: var(--bw); background-position: 0 calc((var(--bh) - var(--dh)) / 2 - var(--dh) / 4); }   /* 全体: 写真は幅いっぱいで、上下の真ん中 */
+  /* 写真の端の消え方は、始まりと終わりの傾きが0の曲線（直線で消すと、始まりと終わりに段が見える）。
+     メニューの左の縁（9° の斜め。帯の上の端で 100cqw - 274.5px = 300 - 22 - 22×tan 9°。.9877 = cos 9°）から右へ 64px と、右端の 10px */
   .hero__slide.is-collage :is(img, video) { width: calc(100% - 290px); object-position: var(--pos, 50% 50%);
-    --soft: linear-gradient(99deg, #000 calc((100cqw - 274.5px) * .9877), transparent calc((100cqw - 224.5px) * .9877)), linear-gradient(270deg, transparent, #000 10px);
-    -webkit-mask: var(--soft); -webkit-mask-composite: source-in; mask: var(--soft); mask-composite: intersect; }   /* ぼかしは、メニューの左の縁（9° の斜め。帯の上の端で 100cqw - 274.5px = 300 - 22 - 22×tan 9°。.9877 = cos 9°）から右へ 50px と、右端の 10px */
+    --fade-menu: linear-gradient(99deg, rgb(0 0 0 / 1) calc((100cqw - 274.5px) * .9877), rgb(0 0 0 / .984) calc((100cqw - 266.5px) * .9877), rgb(0 0 0 / .896) calc((100cqw - 258.5px) * .9877), rgb(0 0 0 / .725) calc((100cqw - 250.5px) * .9877), rgb(0 0 0 / .5) calc((100cqw - 242.5px) * .9877), rgb(0 0 0 / .275) calc((100cqw - 234.5px) * .9877), rgb(0 0 0 / .104) calc((100cqw - 226.5px) * .9877), rgb(0 0 0 / .016) calc((100cqw - 218.5px) * .9877), rgb(0 0 0 / 0) calc((100cqw - 210.5px) * .9877));
+    --fade-end: linear-gradient(270deg, rgb(0 0 0 / 0) 0px, rgb(0 0 0 / .016) 1.25px, rgb(0 0 0 / .104) 2.5px, rgb(0 0 0 / .275) 3.75px, rgb(0 0 0 / .5) 5px, rgb(0 0 0 / .725) 6.25px, rgb(0 0 0 / .896) 7.5px, rgb(0 0 0 / .984) 8.75px, rgb(0 0 0 / 1) 10px);
+    -webkit-mask: var(--fade-menu), var(--fade-end); -webkit-mask-composite: source-in; mask: var(--fade-menu), var(--fade-end); mask-composite: intersect; }
   .hero__slide.is-whole :is(img, video) { position: absolute; left: 0; top: 50%; height: auto; max-height: 100%; translate: 0 -50%; object-fit: contain;
-    --whole: var(--soft), linear-gradient(180deg, transparent, #000 16px, #000 calc(100% - 16px), transparent);
-    -webkit-mask: var(--whole); -webkit-mask-composite: source-in; mask: var(--whole); mask-composite: intersect; }   /* 横に長い写真（全体）は、高さを写真に合わせて上下の真ん中に置き、上下の縁も 16px でぼかす（横の線を出さない。上下はぼかした背景） */
+    --fade-tb: linear-gradient(180deg, rgb(0 0 0 / 0) 0px, rgb(0 0 0 / .016) 3px, rgb(0 0 0 / .104) 6px, rgb(0 0 0 / .275) 9px, rgb(0 0 0 / .5) 12px, rgb(0 0 0 / .725) 15px, rgb(0 0 0 / .896) 18px, rgb(0 0 0 / .984) 21px, rgb(0 0 0 / 1) 24px, rgb(0 0 0 / 1) calc(100% - 24px), rgb(0 0 0 / .984) calc(100% - 21px), rgb(0 0 0 / .896) calc(100% - 18px), rgb(0 0 0 / .725) calc(100% - 15px), rgb(0 0 0 / .5) calc(100% - 12px), rgb(0 0 0 / .275) calc(100% - 9px), rgb(0 0 0 / .104) calc(100% - 6px), rgb(0 0 0 / .016) calc(100% - 3px), rgb(0 0 0 / 0) 100%);
+    -webkit-mask: var(--fade-menu), var(--fade-end), var(--fade-tb); -webkit-mask-composite: source-in; mask: var(--fade-menu), var(--fade-end), var(--fade-tb); mask-composite: intersect; }   /* 全体: 上下の縁も 24px で消す（横の線を出さない） */
 }
 .hero__slide.is-collage::after { background: radial-gradient(ellipse 66% 80% at 0% 100%, rgba(6,19,48,.9), rgba(6,19,48,.55) 45%, transparent 78%); }
 @media (max-width: 960px) { .hero__slide.is-collage::after { background: linear-gradient(180deg, transparent 32%, rgba(6,19,48,.62) 52%, rgba(6,19,48,.92) 78%); } }   /* スマホはコピーが帯の幅いっぱいに重なるので、下半分を暗く */
@@ -98,6 +109,7 @@ img { max-width: 100%; height: auto; vertical-align: middle; }
 @media (prefers-reduced-motion: reduce) { .hero__slide, .hero__edge { transition: none; } }
 /* 写真の切り替え（fx.js が置く）: 自動の切り替えを止めるボタン、何枚目かの数字、押すとその写真に替わる印 */
 .hero__nav { position: absolute; z-index: 3; right: 0; bottom: 26px; display: flex; align-items: center; gap: 6px; }   /* PC は右端に寄せる（左の端は、メニューの左の画像のぼかした所に少しかかる） */
+@media (min-width: 961px) { .hero__nav::before { content: ""; position: absolute; inset: 3px 8px; z-index: -1; border-radius: 12px; background: rgba(6, 19, 48, .5); box-shadow: 0 0 20px 12px rgba(6, 19, 48, .5); pointer-events: none; } }   /* 白い写真の後ろでも数字と印が読めるよう、後ろをふんわり暗くする（縁は出さない） */
 .hero__count { font-family: var(--en); font-weight: 600; font-size: 12.5px; letter-spacing: .08em; color: #c9d8ef; font-variant-numeric: tabular-nums; text-shadow: 0 1px 4px #061330; white-space: nowrap; }
 .hero__count b { font-size: 16px; color: #fff; }
 .hero__dots { display: flex; }
