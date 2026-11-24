@@ -300,7 +300,7 @@ def read_top():
         line = line.strip()
         if not line or line.startswith('#'):
             continue
-        p = [x.strip() for x in line.split('|')]
+        p = [x.strip() for x in line.replace('｜', '|').split('|')]   # 全角の｜も区切りとして読む
         if len(p) < 2 or not p[0] or not p[1]:
             problem(TOP_FILE, f'{no} 行目が読めません:「{line}」。', how)
             return None
@@ -313,7 +313,7 @@ def read_top():
             return None
         opt = {'pos': '', 'sp': '', 'sec': '', 'bg': '', 'whole': False}
         for o in p[2:]:
-            o = re.sub(r'[ 　]+', ' ', o)
+            o = re.sub(r'[ 　]+', ' ', unicodedata.normalize('NFKC', o))   # 全角の数字や％も半角にそろえて読む（そろえないと、サイトでは効かない）
             m = re.fullmatch(r'(位置|スマホ) (\d{1,3})% ?(\d{1,3})%', o)
             if m and int(m.group(2)) <= 100 and int(m.group(3)) <= 100:
                 opt['pos' if m.group(1) == '位置' else 'sp'] = f'{m.group(2)}% {m.group(3)}%'
@@ -325,7 +325,7 @@ def read_top():
             if o == 'メニューの左':   # PC では写真を右のメニューの左に収め、帯いっぱいにはぼかした背景を敷く（右のメニューに顔や写真がかからない）
                 bg = re.sub(r'\.[^./]+$', '-bg.jpg', path)
                 if not exists(bg) and not in_git(bg):
-                    problem(TOP_FILE, f'{no} 行目は「メニューの左」ですが、ぼかした背景「{bg}」がありません。', 'Top画像の台本で作った 〜-bg.jpg も img に入れてください。要らなければ「メニューの左」を消します。')
+                    problem(TOP_FILE, f'{no} 行目は「メニューの左」ですが、ぼかした背景「{bg}」がありません。', '8:3 で作った写真なら「メニューの左」と「全体」を消します（ぼかした背景は、つないだ画像や前からある集合写真のためのものです）。')
                     return None
                 opt['bg'] = bg
                 continue
