@@ -77,10 +77,16 @@ img { max-width: 100%; height: auto; vertical-align: middle; }
     linear-gradient(180deg, rgba(6,19,48,.12) 0%, rgba(20,60,140,.04) 35%, rgba(6,19,48,.18) 58%, rgba(6,19,48,.93) 100%),
     linear-gradient(90deg, rgba(6,19,48,.55) 0%, transparent 14%, transparent 62%, rgba(6,19,48,.45) 100%); }
 /* 何枚かの写真をつないだ画像（is-collage）は、メニューの左に見える範囲（横:縦 = 1.92:1）に合わせて組み直してある（作り方は Top画像の 組み直し.py）。
-   PC ではメニューの左の範囲いっぱいに出し、右のメニューに写真が隠れないようにする。スマホは帯いっぱい（見せる所は --sp）。暗くするのはコピーの後ろだけ */
+   PC ではメニューの左の範囲に出し、右端はメニューのガラスの下でぼかす（顔はメニューにかけない）。スマホは帯いっぱい（見せる所は --sp）。暗くするのはコピーの後ろだけ */
 .hero__slide.is-collage { background-color: #071636; background-position: center; background-size: cover; background-repeat: no-repeat; }   /* 帯いっぱいに、その画像をぼかした背景（index.html の background-image）を敷き、メニューの後ろにも絵が見えるようにする */
 .hero__slide.is-collage :is(img, video) { display: block; object-position: var(--sp, 50% 50%); }
-@media (min-width: 961px) { .hero__slide.is-collage :is(img, video) { width: calc(100% - 338px); object-position: var(--pos, 50% 50%); box-shadow: 6px 0 0 #061330; } .hero__slide.is-whole :is(img, video) { object-fit: contain; box-shadow: none; } }   /* 右端はメニューの斜めの縁の下の角にそろえる（幅1280以上で 902×470 = 画像と同じ 1.92:1）。右の縁にも、写真の間と同じ太さのすき間 */
+@media (min-width: 961px) {   /* 写真の右端はメニューの左上の角より 12px 左（右端の近くの顔も、メニューにかからない） */
+  .hero__slides { container-type: inline-size; }   /* 100cqw = 帯の幅 */
+  .hero__slide.is-collage :is(img, video) { width: calc(100% - 290px); object-position: var(--pos, 50% 50%);
+    --soft: linear-gradient(99deg, #000 calc((100cqw - 274.5px) * .9877), transparent calc((100cqw - 224.5px) * .9877)), linear-gradient(270deg, transparent, #000 10px);
+    -webkit-mask: var(--soft); -webkit-mask-composite: source-in; mask: var(--soft); mask-composite: intersect; }   /* ぼかしは、メニューの左の縁（9° の斜め。帯の上の端で 100cqw - 274.5px = 300 - 22 - 22×tan 9°。.9877 = cos 9°）から右へ 50px と、右端の 10px */
+  .hero__slide.is-whole :is(img, video) { object-fit: contain; }
+}
 .hero__slide.is-collage::after { background: radial-gradient(ellipse 66% 80% at 0% 100%, rgba(6,19,48,.9), rgba(6,19,48,.55) 45%, transparent 78%); }
 @media (max-width: 960px) { .hero__slide.is-collage::after { background: linear-gradient(180deg, transparent 32%, rgba(6,19,48,.62) 52%, rgba(6,19,48,.92) 78%); } }   /* スマホはコピーが帯の幅いっぱいに重なるので、下半分を暗く */
 /* 左端の斜めの暗い帯と光る縁（つないだ画像のときは、画像の角を隠さないよう消す） */
@@ -89,7 +95,7 @@ img { max-width: 100%; height: auto; vertical-align: middle; }
 .hero__slides, .hero__copy { touch-action: pan-y pinch-zoom; }   /* 写真の上で横に払ったら、ブラウザの「戻る」ではなく写真の切り替えにする（縦のスクロールと拡大はそのまま） */
 @media (prefers-reduced-motion: reduce) { .hero__slide, .hero__edge { transition: none; } }
 /* 写真の切り替え（fx.js が置く）: 自動の切り替えを止めるボタン、何枚目かの数字、押すとその写真に替わる印 */
-.hero__nav { position: absolute; z-index: 3; right: 0; bottom: 26px; display: flex; align-items: center; gap: 6px; }   /* PC は右端に寄せ、メニューの左に収めた画像（右端 = 幅 - 338px）にかからないようにする */
+.hero__nav { position: absolute; z-index: 3; right: 0; bottom: 26px; display: flex; align-items: center; gap: 6px; }   /* PC は右端に寄せる（左の端は、メニューの左の画像のぼかした所に少しかかる） */
 .hero__count { font-family: var(--en); font-weight: 600; font-size: 12.5px; letter-spacing: .08em; color: #c9d8ef; font-variant-numeric: tabular-nums; text-shadow: 0 1px 4px #061330; white-space: nowrap; }
 .hero__count b { font-size: 16px; color: #fff; }
 .hero__dots { display: flex; }
@@ -116,6 +122,7 @@ img { max-width: 100%; height: auto; vertical-align: middle; }
 .hero__menu a .fa { font-size: 15px; color: #dbe9ff; }
 .hero__menu a::after { content: "\f054"; font-family: FontAwesome; margin-left: auto; font-size: 11px; color: var(--sub); }
 .hero__menu a:hover { color: var(--memorial-hi); }
+@media (min-width: 961px) { .hero__menu { background: rgba(5, 16, 40, .55); } }   /* PC は写真に重なるので、薄くして写真を透かす（スマホは .78 のまま） */
 
 /* 5枚のタイル */
 .tiles { position: relative; z-index: 2; list-style: none; margin: -18px 0 0; padding: 0 0 0 4px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
