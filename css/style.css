@@ -63,11 +63,10 @@ img { max-width: 100%; height: auto; vertical-align: middle; }
 
 /* 主役: 写真・キャッチコピー・メニュー */
 .hero { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 300px; min-height: 500px; }
-.hero__slide .is-wide { object-fit: contain; object-position: 0 100%; transform: scale(1.24); transform-origin: 30% 100%; filter: brightness(1.12) saturate(.95); }
 .hero__slides { position: absolute; inset: 0; overflow: hidden; background: radial-gradient(ellipse 70% 60% at 40% 20%, #18407e, #071636 70%); }
 .hero__slide { position: absolute; inset: 0; margin: 0; opacity: 0; transition: opacity .6s ease; }
 .hero__slide.is-on { opacity: 1; }   /* 見せている写真。6秒ごとに fx.js が次へ替える（JavaScript が動かないときは1枚目のまま） */
-.hero__slide img { width: 100%; height: 100%; object-fit: cover; object-position: var(--pos, 50% 50%); filter: saturate(.95) brightness(1.04); }   /* 写真ごとの見せる位置は、index.html の --pos（スマホは --sp） */
+.hero__slide img, .hero__slide video { display: block; width: 100%; height: 100%; object-fit: cover; object-position: var(--pos, 50% 50%); filter: saturate(.95) brightness(1.04); }   /* 写真（動画）ごとの見せる位置は、index.html の --pos（スマホは --sp） */
 /* 写真の上の暗さ（下はコピーの後ろ、左右は縁）。写真ごとに持たせて、写真と一緒に入れ替える */
 .hero__slide::after { content: ""; position: absolute; inset: 0;
   background:
@@ -173,9 +172,8 @@ img { max-width: 100%; height: auto; vertical-align: middle; }
   .gn .is-current a { padding: 0 22px; }
   .hero { display: block; min-height: 0; }
   .hero__slides { position: relative; aspect-ratio: 4 / 3; }
-  .hero__slide img { object-position: var(--sp, var(--pos, 50% 50%)); }
+  .hero__slide img, .hero__slide video { object-position: var(--sp, var(--pos, 50% 50%)); }
   .hero__nav { position: static; justify-content: flex-start; gap: 8px; margin-top: 8px; }   /* スマホは左から、止めるボタン・何枚目か・印 */
-  .hero__slide .is-wide { object-fit: cover; object-position: 38% 50%; transform: none; }
   .hero__edge { display: none; }
   .hero__copy { position: absolute; left: 0; right: 0; top: 0; aspect-ratio: 4 / 3; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 14px 16px; box-sizing: border-box; }
   .hero__lead { font-size: 22px; margin-bottom: 8px; }
@@ -360,7 +358,7 @@ html { overflow-x: hidden; }
 /* 写真の上のメニュー（タイルに無い8ページ）を高さいっぱいに均等に並べる。
    画面が低いときは写真を低くして、下のタイルまで最初の画面に入れる */
 @media (min-width: 961px) {
-  .hero { min-height: min(clamp(340px, calc(100vh - 340px), 500px), calc((100vw - 40px) / 2.25)); }   /* 幅の狭い画面では、横長の集合写真（.is-wide）が枠を覆える高さまでにする（上に暗い隙間を出さない） */
+  .hero { min-height: 0; aspect-ratio: 8 / 3; }   /* 写真の帯は横:縦 = 8:3（先生が写真と動画をこの形で用意する） */
   .hero__menu ul { display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
   .hero__menu li { flex: 1; display: flex; }
   .hero__menu a { flex: 1; font-size: 14px; }
@@ -415,12 +413,13 @@ html { overflow-x: hidden; }
   .hero__menu { margin-bottom: 58px; }   /* 下に、写真の切り替えの印（.hero__nav）を置く分をあける */
   .hero__menu a { padding-top: 2px; padding-bottom: 2px; font-size: 13px; }
 }
-/* トップの写真とコピーの重なり: 幅 961〜1100px は写真が低くなるので、コピーを小さくして下げ、横長の集合写真（.is-wide）を少し上へずらす */
+/* トップの写真とコピーの重なり: 幅 961〜1100px は写真が低くなるので、コピーを小さくして下げる */
 @media (min-width: 961px) and (max-width: 1100px) {
   .hero__lead { font-size: 34px; margin-bottom: 12px; }
   .hero__copy { padding-bottom: 30px; }
+  .hero__menu { margin-bottom: 60px; }   /* 8:3 の帯は低いので、メニューを詰めて、下の写真の切り替えの列にかからないようにする */
+  .hero__menu a { padding-top: 1px; padding-bottom: 1px; font-size: 13px; }
 }
-@media (min-width: 961px) and (max-width: 1100px) and (min-height: 761px) { .hero__slide .is-wide { transform: translateY(-6%) scale(1.24); } }
 
 /* ===== 下層ページの本文。枠と色はトップと同じにして、読む所だけ落ち着かせる ===== */
 .phero--plain { min-height: 170px; background: linear-gradient(100deg, rgba(47,127,232,.36), rgba(6,19,48,0) 64%), repeating-linear-gradient(112deg, rgba(109,182,255,.08) 0 2px, transparent 2px 26px); }

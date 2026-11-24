@@ -83,7 +83,7 @@
     window.addEventListener('resize', function () { cancelAnimationFrame(wideFrame); wideFrame = requestAnimationFrame(markWide); });
     document.addEventListener('toggle', markWide, true);   // たたんだ表を開いたとき
   }
-  /* ---- 0) トップの写真: 6秒ごとに次へ。2枚目以降はページを読み終えてから読む（1枚目を早く出すため）。
+  /* ---- 0) トップの写真: 6秒ごとに次へ（figure に data-sec があればその秒数）。動画（video）も置ける。2枚目以降の写真はページを読み終えてから読み、動画は1つ前の写真を出したときに読む。
      自動の切り替えは、印の左の ⏸ ボタンで止める（押した状態は覚える）。ヘッダーの「動きを止める」では止めない（先生の希望）。
      端末が「動きを減らす」設定のときは初めから止めておき、▶ で動かせる。止めている間は、押した写真だけをその場で読む ---- */
   var reduced = function () { return !!(reduceMq && reduceMq.matches); };
@@ -109,29 +109,37 @@
       play.setAttribute('aria-label', t); play.title = t;
       play.firstChild.className = 'fa ' + (stopped ? 'fa-play' : 'fa-pause');
     };
-    var img = function (k) {   // k 枚目の写真を、まだ読んでいなければ読み始める
-      var im = heroSlides[k].querySelector('img');
-      if (im && im.hasAttribute('data-src') && !im.getAttribute('src')) im.src = im.getAttribute('data-src');
+    var img = function (k) {   // k 枚目の写真（動画）を、まだ読んでいなければ読み始める
+      var im = heroSlides[k].querySelector('img, video');
+      if (im && im.hasAttribute('data-src') && !im.getAttribute('src')) {
+        if (im.tagName === 'VIDEO') im.preload = 'auto';
+        im.src = im.getAttribute('data-src');
+      }
       return im;
     };
+    var isVideo = function (k) { var m = heroSlides[k].querySelector('img, video'); return !!m && m.tagName === 'VIDEO'; };
+    var ready = function (m) { return !m || (m.tagName === 'VIDEO' ? m.readyState >= 2 : m.complete && !!m.getAttribute('src')); };
+    var preloadAll = function () { for (var j = 0; j < n; j++) if (!isVideo(j)) img(j); };   // 動画は重いので、先には読まない
     var mark = function () {
       for (var j = 0; j < n; j++) {
         heroSlides[j].classList.toggle('is-on', j === cur);
         if (j === cur) { heroSlides[j].removeAttribute('aria-hidden'); dots[j].setAttribute('aria-current', 'true'); }
         else { heroSlides[j].setAttribute('aria-hidden', 'true'); dots[j].removeAttribute('aria-current'); }
+        var v = heroSlides[j].querySelector('video');   // 見せている動画だけ、頭から流す（動きを減らす設定では流さず、最初のコマを見せる）
+        if (v) { if (j === cur && !reduced()) { try { v.currentTime = 0; } catch (e) { /* まだ読めていない */ } var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); } else v.pause(); }
       }
       num.textContent = two(cur + 1);
     };
     var schedule = function () {
       clearTimeout(timer); timer = 0;
-      if (!stopped && !document.hidden) timer = setTimeout(function () { go(cur + 1); }, 6000);
+      if (!stopped && !document.hidden) timer = setTimeout(function () { go(cur + 1); }, (parseFloat(heroSlides[cur].getAttribute('data-sec')) || 6) * 1000);
     };
     var go = function (k) {   // 写真が届いてから替える（届く前に替えると、一瞬なにも写らない）
       k = (k % n + n) % n; want = k;
       var im = img(k);
       var swap = function () { if (want !== k) return; cur = k; mark(); img((k + 1) % n); schedule(); };
-      if (!im || (im.complete && im.getAttribute('src'))) swap();
-      else { im.addEventListener('load', swap, { once: true }); im.addEventListener('error', swap, { once: true }); }
+      if (ready(im)) swap();
+      else { im.addEventListener(im.tagName === 'VIDEO' ? 'loadeddata' : 'load', swap, { once: true }); im.addEventListener('error', swap, { once: true }); }
     };
     Array.prototype.forEach.call(dots, function (d, k) { d.addEventListener('click', function () { go(k); }); });
     play.addEventListener('click', function () {   // ⏸ ですぐ止め、▶ ですぐ次の写真へ進めて、そこから6秒ごとに替える
@@ -139,7 +147,7 @@
       try { if (stopped) localStorage.setItem('shiba-slides', 'off'); else localStorage.removeItem('shiba-slides'); } catch (e) { /* 覚えられなくても、このページでは止まる */ }
       playLabel();
       if (stopped) { schedule(); return; }
-      for (var j = 0; j < n; j++) img(j);
+      preloadAll();
       go(cur + 1);
     });
     nav.addEventListener('keydown', function (e) {   // 印を選んでいるときは ← → で前後へ
@@ -166,7 +174,8 @@
     playLabel();
     mark();
     var start = function () {
-      if (!stopped) for (var j = 0; j < n; j++) img(j);   // 自動で替えるときは、全部を先に読んでおく
+      if (!stopped) preloadAll();   // 自動で替えるときは、写真を全部先に読んでおく
+      img((cur + 1) % n);
       schedule();
     };
     if (document.readyState === 'complete') start(); else window.addEventListener('load', start);
