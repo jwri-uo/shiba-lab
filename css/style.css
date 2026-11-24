@@ -80,7 +80,7 @@ img { max-width: 100%; height: auto; vertical-align: middle; }
    PC ではメニューの左の範囲いっぱいに出し、右のメニューに写真が隠れないようにする。スマホは帯いっぱい（見せる所は --sp）。暗くするのはコピーの後ろだけ */
 .hero__slide.is-collage { background-color: #071636; background-position: center; background-size: cover; background-repeat: no-repeat; }   /* 帯いっぱいに、その画像をぼかした背景（index.html の background-image）を敷き、メニューの後ろにも絵が見えるようにする */
 .hero__slide.is-collage img { display: block; object-position: var(--sp, 50% 50%); }
-@media (min-width: 961px) { .hero__slide.is-collage img { width: calc(100% - 338px); object-position: 50% 50%; box-shadow: 6px 0 0 #061330; } }   /* 右端はメニューの斜めの縁の下の角にそろえる（幅1280以上で 902×470 = 画像と同じ 1.92:1）。右の縁にも、写真の間と同じ太さのすき間 */
+@media (min-width: 961px) { .hero__slide.is-collage img { width: calc(100% - 338px); object-position: var(--pos, 50% 50%); box-shadow: 6px 0 0 #061330; } .hero__slide.is-whole img { object-fit: contain; box-shadow: none; } }   /* 右端はメニューの斜めの縁の下の角にそろえる（幅1280以上で 902×470 = 画像と同じ 1.92:1）。右の縁にも、写真の間と同じ太さのすき間 */
 .hero__slide.is-collage::after { background: radial-gradient(ellipse 66% 80% at 0% 100%, rgba(6,19,48,.9), rgba(6,19,48,.55) 45%, transparent 78%); }
 @media (max-width: 960px) { .hero__slide.is-collage::after { background: linear-gradient(180deg, transparent 32%, rgba(6,19,48,.62) 52%, rgba(6,19,48,.92) 78%); } }   /* スマホはコピーが帯の幅いっぱいに重なるので、下半分を暗く */
 /* 左端の斜めの暗い帯と光る縁（つないだ画像のときは、画像の角を隠さないよう消す） */

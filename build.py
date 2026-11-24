@@ -7,12 +7,13 @@
 push すると GitHub が自動で --apply を実行するので、ふだんは手元で流す必要はない。
 
 各ページで人が書くのは <main> … </main> の中だけ。その外側（ヘッダー・上の帯・フッター）は _frame/frame.html から、
-上の帯と左のメニューの項目は _frame/menu.txt から作り直す。<head> の中で、そのページだけで読み込むもの（js など）は
+上の帯と左のメニューの項目は _frame/menu.txt から、トップの写真と動画は _frame/top.txt から作り直す。<head> の中で、そのページだけで読み込むもの（js など）は
 <!-- この下は、このページだけの行 --> より下に書く（上は枠の行なので作り直される）。<main> の中でも、次の目印で挟まれた所は自動で作り直す
 （目印の間を手で直しても、次の実行で元に戻る）:
 
   <!-- 自動:メニュー -->       左のメニュー
   <!-- 自動:ページ一覧 -->     トップの写真の上の一覧
+  <!-- 自動:トップの写真 -->   トップの写真と動画（_frame/top.txt の並び）
   <!-- 自動:新着 -->           トップのお知らせ（新しい6件）
   <!-- 自動:お知らせ一覧 -->   お知らせの一覧（年ごと）
   <!-- 自動:前後の記事 -->     お知らせの記事の下の「新しい記事／一覧へ／古い記事」
@@ -26,6 +27,7 @@ push すると GitHub が自動で --apply を実行するので、ふだんは�
   0  問題なし
   2  直す必要のある所があった。ファイル名と直し方を出す。そのページは前のままにし、ほかは作り直す。
      お知らせに問題があるあいだは、記事が一覧から消えないように、お知らせの一覧・新着・前後の記事・関連も前のままにする
+     _frame/top.txt に問題があるあいだは、トップの写真の帯を前のままにする
   1  枠（_frame/frame.html）やメニュー（_frame/menu.txt）の問題。全ページに響くので、何も書かずに止まる
 """
 import datetime, hashlib, html, io, os, re, subprocess, sys, unicodedata, urllib.parse
@@ -50,7 +52,7 @@ FUTURE = datetime.timedelta(days=366)                                       # �
 THUMB_STYLE = ('v1', 82)                                                    # 小さな画像の作り方の版と画質。変えると全部作り直される
 TEMPLATE_WORDS = ('ここに題名を書きます', 'ここに本文を書きます', '写真は img フォルダに入れて', 'alt="写真の説明"')   # ひな形の見本の文
 HEAD_MARK = '<!-- この下は、このページだけの行 -->'                           # 枠の <head> の中で、これより下がページごとの行
-REGIONS = ('メニュー', 'ページ一覧', '新着', 'お知らせ一覧', '前後の記事', '関連')
+REGIONS = ('メニュー', 'ページ一覧', 'トップの写真', '新着', 'お知らせ一覧', '前後の記事', '関連')
 NEWS_REGIONS = ('新着', 'お知らせ一覧', '前後の記事', '関連')                # お知らせから作る所。お知らせに問題があるあいだは前のまま
 PLACEHOLDERS = ('{{題名}}', '{{自動の行}}', '{{このページだけの行}}', '{{帯}}', '{{本文}}')
 
@@ -65,7 +67,7 @@ OPEN_RX = re.compile(r'<!-- 自動:(\S+?)(?: ([^>]*?))? -->')
 CLOSE_RX = re.compile(r'<!-- /自動:(\S+) -->')
 SEQ_RX = re.compile(r'<!-- (/?)自動:(\S+?)(?: [^>]*?)? -->')
 LOOSE_RX = re.compile(r'<!--\s*/?\s*自動\s*[:：]')
-AUTO_LINE = re.compile(r'\s*(?:</|<(?:li|ul|h2|nav|aside|details|summary|section|div|a)\b|<p class="news__nav">|<p>関連するお知らせは|<p>新しい15件)')   # 自動で作る行の頭
+AUTO_LINE = re.compile(r'\s*(?:</|<(?:li|ul|h2|nav|aside|details|summary|section|div|a|figure)\b|<p class="news__nav">|<p>関連するお知らせは|<p>新しい15件)')   # 自動で作る行の頭
 AUTO_RX = re.compile(r'<meta\b[^>]*\b(?:name\s*=\s*["\']?(?:description|robots|twitter:[\w:]*)|property\s*=\s*["\']?og:)|<base\b', re.I)   # 自動で付け直す行
 DROP_HEAD = re.compile(r'<meta\s+(?:charset|name=["\']?(?:generator|viewport)\b|http-equiv=["\']?content-type)', re.I)   # 枠にある行や、ホームページ・ビルダーが足すことのある行は捨てる
 
@@ -277,6 +279,91 @@ def top_list_html():
     """トップの写真の上の一覧（タイルで出しているページと「下層のみ」のページは除く）"""
     items = [it for _, its in GROUPS for it in its if not it['flag']]
     return '<ul>\n' + ''.join(f'        <li>{link(it)}</li>\n' for it in items) + '      </ul>'
+
+
+TOP_FILE = '_frame/top.txt'
+TOP_PICTURE = ('.jpg', '.jpeg', '.png', '.webp', '.gif')
+TOP_VIDEO = ('.mp4', '.webm')
+
+
+def read_top():
+    """_frame/top.txt（トップの写真と動画の並び）を読み、写真の帯の中身を作る。
+    読めない行や無いファイルがあれば、問題として覚えて None を返す（トップの写真の帯は前のままにする）"""
+    if not exists(TOP_FILE):
+        return None
+    s = read(TOP_FILE)
+    if s is None:
+        return None
+    how = '1行に1つ、「ファイルの名前 | 説明」の順に半角の | で区切って書きます。3つ目からは「位置 50% 40%」「スマホ 30% 50%」「10秒」「メニューの左」「全体」を書けます（無くても構いません）。'
+    items = []
+    for no, line in enumerate(s.split(NL), 1):
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        p = [x.strip() for x in line.split('|')]
+        if len(p) < 2 or not p[0] or not p[1]:
+            problem(TOP_FILE, f'{no} 行目が読めません:「{line}」。', how)
+            return None
+        path = p[0]
+        if not path.lower().endswith(TOP_PICTURE + TOP_VIDEO):
+            problem(TOP_FILE, f'{no} 行目の「{path}」は、写真（.jpg .png .webp .gif）か動画（.mp4 .webm）のファイルではありません。', how)
+            return None
+        if not exists(path) and not in_git(path):
+            problem(TOP_FILE, f'{no} 行目のファイル「{path}」がありません。', 'img フォルダに入れたか、名前の打ち間違い（大文字と小文字も区別されます）がないか確かめてください。')
+            return None
+        opt = {'pos': '', 'sp': '', 'sec': '', 'bg': '', 'whole': False}
+        for o in p[2:]:
+            o = re.sub(r'[ 　]+', ' ', o)
+            m = re.fullmatch(r'(位置|スマホ) (\d{1,3})% ?(\d{1,3})%', o)
+            if m and int(m.group(2)) <= 100 and int(m.group(3)) <= 100:
+                opt['pos' if m.group(1) == '位置' else 'sp'] = f'{m.group(2)}% {m.group(3)}%'
+                continue
+            m = re.fullmatch(r'(\d{1,3}(?:\.\d)?) ?秒', o)
+            if m and 1 <= float(m.group(1)) <= 120:
+                opt['sec'] = m.group(1)
+                continue
+            if o == 'メニューの左':   # PC では写真を右のメニューの左に収め、帯いっぱいにはぼかした背景を敷く（右のメニューに顔や写真がかからない）
+                bg = re.sub(r'\.[^./]+$', '-bg.jpg', path)
+                if not exists(bg) and not in_git(bg):
+                    problem(TOP_FILE, f'{no} 行目は「メニューの左」ですが、ぼかした背景「{bg}」がありません。', 'Top画像の台本で作った 〜-bg.jpg も img に入れてください。要らなければ「メニューの左」を消します。')
+                    return None
+                opt['bg'] = bg
+                continue
+            if o == '全体':   # 「メニューの左」の範囲に、写真の全部を入れる（横に長い集合写真など。上下はぼかした背景）
+                opt['whole'] = True
+                continue
+            if o:
+                problem(TOP_FILE, f'{no} 行目の「{o}」が読めません。', how)
+                return None
+        items.append((path, p[1], opt))
+    if not items:
+        problem(TOP_FILE, '写真が1つもありません。', '「ファイルの名前 | 説明」の行を1つ以上書いてください。')
+        return None
+    return top_html(items)
+
+
+def top_html(items):
+    """トップの写真の帯の中身。1つ目はすぐ読む（ほかは fx.js がページを読み終えてから読む）"""
+    out = []
+    for i, (path, alt, opt) in enumerate(items):
+        cls = 'hero__slide' + (' is-on' if i == 0 else '') + (' is-collage' if opt['bg'] else '') + (' is-whole' if opt['whole'] else '')
+        fig = f'<figure class="{cls}"'
+        if opt['bg']:
+            fig += f' style="background-image: url({opt["bg"]})"'
+        if opt['sec']:
+            fig += f' data-sec="{opt["sec"]}"'
+        style = '; '.join(x for x in (f'--pos: {opt["pos"]}' if opt['pos'] else '', f'--sp: {opt["sp"]}' if opt['sp'] else '') if x)
+        st = f' style="{style}"' if style else ''
+        src = ('src' if i == 0 else 'data-src') + '="' + html.escape(path) + '"'
+        a = html.escape(alt)
+        if path.lower().endswith(TOP_VIDEO):
+            pre = 'auto' if i == 0 else 'none'
+            media = f'<video {src} muted loop playsinline preload="{pre}" aria-label="{a}"{st}></video>'
+        else:
+            first = ' fetchpriority="high"' if i == 0 else ''
+            media = f'<img {src} alt="{a}"{st}{first}>'
+        out.append(f'      {fig}>{media}</figure>')
+    return NL.join(out)
 
 
 # ---- お知らせ
@@ -629,6 +716,8 @@ def rebuild(name, s, ctx):
         keep_writing(name, body, name_r)
     body = region(body, 'メニュー', '    ' + side_html(name))
     body = region(body, 'ページ一覧', ctx['top_list'])
+    if ctx['top'] is not None:
+        body = region(body, 'トップの写真', ctx['top'])
     if not ctx['frozen']:
         body = region(body, '新着', ctx['latest'])
         body = region(body, 'お知らせ一覧', ctx['list'])
@@ -693,7 +782,7 @@ def main():
     spots = read_spots()
     related_cache = {}
     ctx = {'frame': frame, 'frame_head': frame_head, 'news': news, 'by_file': by_file, 'frozen': frozen,
-           'top_list': '      ' + top_list_html(),
+           'top_list': '      ' + top_list_html(), 'top': read_top(),
            'latest': '' if frozen else latest_html(news), 'list': '' if frozen else list_html(news),
            'related': lambda w: related_cache.setdefault(w, related_html(news, spots, w))}
     pending, final = {}, {}
