@@ -83,6 +83,63 @@
     window.addEventListener('resize', function () { cancelAnimationFrame(wideFrame); wideFrame = requestAnimationFrame(markWide); });
     document.addEventListener('toggle', markWide, true);   // たたんだ表を開いたとき
   }
+  // 見出しに「区分」の列がある表（学生全員の発表実績）は、区分を読んで行ごとに色を付ける（受賞・特許・留学・海外発表を目立たせる）。
+  // 区分のセルは何行にもまたがる（rowspan）ので、表の格子を組み立てて各行の区分を決める。先生が行を足しても、区分の文字を書けば色が付く
+  var KINDS = [['留学', 'abroad', '留学'], ['特許', 'patent', '特許'], ['受賞', 'award', '受賞'], ['海外', 'intl', '海外発表'], ['論文', 'paper', '']];
+  var kindOf = function (t) {
+    t = t.replace(/\s+/g, '');
+    for (var i = 0; i < KINDS.length; i++) if (t.indexOf(KINDS[i][0]) >= 0) return KINDS[i][1];
+    return '';
+  };
+  var seenKinds = {}, firstKindTable = null;
+  Array.prototype.forEach.call(document.querySelectorAll('.doc table'), function (tb) {
+    var head = tb.tHead && tb.tHead.rows[0], kc = -1;
+    if (!head) return;
+    for (var i = 0; i < head.cells.length; i++) if (head.cells[i].textContent.replace(/\s+/g, '') === '区分') kc = i;
+    if (kc < 0) return;
+    firstKindTable = firstKindTable || tb;
+    Array.prototype.forEach.call(tb.tBodies, function (body) {
+      var occ = [];   // occ[行][列] = その場所を占めるセル
+      Array.prototype.forEach.call(body.rows, function (tr, r) {
+        occ[r] = occ[r] || [];
+        var col = 0, starts = [];
+        Array.prototype.forEach.call(tr.cells, function (td) {
+          while (occ[r][col]) col++;
+          var rs = Math.max(1, td.rowSpan || 1), cs = Math.max(1, td.colSpan || 1);
+          for (var dr = 0; dr < rs; dr++) { occ[r + dr] = occ[r + dr] || []; for (var dc = 0; dc < cs; dc++) occ[r + dr][col + dc] = td; }
+          starts.push([col, td]);
+          col += cs;
+        });
+        var kcell = occ[r][kc];
+        if (!kcell) return;
+        if (!kcell.hasAttribute('data-kind')) {
+          kcell.setAttribute('data-kind', kindOf(kcell.textContent));
+          kcell.classList.add('is-kind');
+        }
+        var k = kcell.getAttribute('data-kind');
+        if (!k) return;
+        seenKinds[k] = true;
+        starts.forEach(function (s) { if (s[0] > kc) s[1].setAttribute('data-kind', k); });
+      });
+    });
+  });
+  if (firstKindTable) {   // 色の見方（このページにある区分だけ）を、目次の下に出す
+    var lg = document.createElement('p');
+    lg.className = 'kind-legend';
+    lg.setAttribute('aria-hidden', 'true');   // 区分は表の中に文字であるので、読み上げには要らない
+    lg.appendChild(document.createTextNode('色の見方'));
+    [2, 1, 0, 3].forEach(function (i) {   // 受賞・特許・留学・海外発表の順に（読み取りの順とは違う）
+      var k = KINDS[i];
+      if (!seenKinds[k[1]]) return;
+      var sp = document.createElement('span');
+      sp.setAttribute('data-kind', k[1]);
+      sp.textContent = k[2];
+      lg.appendChild(sp);
+    });
+    var toc = document.querySelector('.doc__toc'), anchor = firstKindTable.closest('details') || firstKindTable.closest('.doc__scroll') || firstKindTable;
+    if (toc) toc.parentNode.insertBefore(lg, toc.nextSibling);
+    else anchor.parentNode.insertBefore(lg, anchor);
+  }
   /* ---- 0) トップの写真: 6秒ごとに次へ（figure に data-sec があればその秒数）。動画（video）も置ける。2枚目以降の写真はページを読み終えてから読み、動画は1つ前の写真を出したときに読む。
      自動の切り替えは、印の左の ⏸ ボタンで止める（押した状態は覚える）。ヘッダーの「動きを止める」では止めない（先生の希望）。
      端末が「動きを減らす」設定のときは初めから止めておき、▶ で動かせる。止めている間は、押した写真だけをその場で読む ---- */

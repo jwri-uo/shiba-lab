@@ -627,6 +627,17 @@ html { overflow-x: hidden; }
 /* 発表実績: 学生の写真を全員同じ大きさにそろえる（メンバー紹介と同じ） */
 .doc--presentations td img { display: block; width: 160px; height: 200px; max-width: none; margin: 0 auto 6px; object-fit: cover; object-position: 50% 18%; }
 @media (max-width: 960px) { .doc--presentations td img { width: 104px; height: 130px; } }
+/* 区分ごとの色（fx.js が「区分」の列を読んで data-kind を付ける）。受賞・特許・留学・海外発表を目立たせ、数の多い論文発表は色を付けない。
+   色合いは公立大のサイトの色分け（受賞=桃、特許=緑、留学=紫、海外発表=赤）に合わせ、紺の地で字が読める濃さにした */
+[data-kind="award"] { --k: 255, 108, 168; }
+[data-kind="patent"] { --k: 94, 224, 150; }
+[data-kind="abroad"] { --k: 140, 128, 255; }
+[data-kind="intl"] { --k: 255, 146, 120; }
+.doc td[data-kind]:not([data-kind="paper"], [data-kind=""]) { background: rgba(var(--k), .16); }   /* その行の題目〜年月 */
+.doc td.is-kind[data-kind]:not([data-kind="paper"], [data-kind=""]) { background: rgba(var(--k), .36); box-shadow: inset 4px 0 0 rgb(var(--k)); color: #fff; }   /* 区分のセル */
+.kind-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin: -.4em 0 1.4em; font-size: 13px; color: var(--sub); }
+.kind-legend span { display: inline-flex; align-items: center; gap: 6px; color: #e8f0fc; font-weight: 700; }
+.kind-legend span::before { content: ""; width: 16px; height: 16px; border-radius: 3px; background: rgba(var(--k), .5); box-shadow: inset 4px 0 0 rgb(var(--k)); }
 
 /* OB・OGリスト: 写真を全員同じ大きさにそろえる（メンバー紹介と同じ） */
 .doc--ob td:first-child { width: 160px; }
